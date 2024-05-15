@@ -1,0 +1,9 @@
+.containers {
+    background-image: url('https://i.postimg.cc/6q4ZjmDw/Rectangle-1.png');
+    background-repeat: no-repeat;
+    background-size: cover; /* Add this line to cover the entire container */
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    padding: 0;
+}
