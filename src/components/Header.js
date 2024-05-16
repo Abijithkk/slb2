@@ -26,11 +26,14 @@ function Header() {
                             <Link className='ms-3' to={'/request'} style={{ textDecoration: "none",color: "white", padding: "15px", fontSize: "16px" }}>
                                 Employee Request
                             </Link>
-                            <Link className='ms-3' to={'/profile'} style={{ textDecoration: "none",color: "white", padding: "15px", fontSize: "16px" }}>
+                            <Link className='ms-3' to={'/result'} style={{ textDecoration: "none",color: "white", padding: "15px", fontSize: "16px" }}>
                                 Employee Profile
                             </Link>
+                            <Link className='ms-3' to={'/add'} style={{ textDecoration: "none",color: "white", padding: "15px", fontSize: "16px" }}>
+                                Add Employee
+                            </Link>
                             <Link className='ms-3' to={'/remove'} style={{ textDecoration: "none",color: "white", padding: "15px", fontSize: "16px" }}>
-                                Remove Data
+                                Remove Employee
                             </Link>
                             
                         </Nav>

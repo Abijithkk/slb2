@@ -6,7 +6,7 @@ import Result from './pages/Result';
 import Profile from './pages/Profile';
 import EmpReq from './pages/EmpReq';
 import EmpRemove from './pages/EmpRemove';
-import Prof from './pages/Pwer';
+import AddEmp from './pages/AddEmp';
 
 function App() {
   return (
@@ -15,10 +15,11 @@ function App() {
      <Route path='/' element={<Home></Home>} ></Route>
      <Route path='/login' element={<Login></Login>} ></Route>
      <Route path='/result' element={<Result></Result>} ></Route>
-     <Route path='/profile' element={<Profile></Profile>} ></Route>
+     <Route path='/profile/:id' element={<Profile></Profile>} ></Route>
      <Route path='/request' element={<EmpReq></EmpReq>} ></Route>
      <Route path='/remove' element={<EmpRemove></EmpRemove>} ></Route>
-     <Route path='/prof' element={<Prof></Prof>} ></Route>
+     <Route path='/add' element={<AddEmp></AddEmp>} ></Route>
+
 
      </Routes>
     </div>
