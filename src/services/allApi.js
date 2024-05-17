@@ -37,3 +37,12 @@ export const updateProfileImage = async (profileId, updatedData) => {
     throw new Error('Failed to update profile');
   }
 };
+
+export const userrequest = async (body) => {
+  return await commonApi("GET", `${BASE_URL}/api/all-users/`, body, "");
+};
+
+
+export const updateUserStatus = async (userId, action) => {
+  return await axios.post(`${BASE_URL}/api/profile/Accept-Reject/${userId}/`, { action });
+};
