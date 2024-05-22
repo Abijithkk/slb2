@@ -1,0 +1,61 @@
+.search {
+    display: flex;
+    margin: 20px;
+    margin-left: 2%;
+  }
+  .search__input {
+    font-family: inherit;
+    font-size: 16px;
+    background-color: #FFFFFF;
+    border: none;
+    color: #646464;
+    padding: 0.7rem 1.5rem;
+    border-radius: 50px;
+    width: 300px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  }
+  .search__input:hover, .search__input:focus {
+    background-color: #FFFFFF;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  }
+  .search__input:focus {
+    outline: none;
+  }
+  .search__input::placeholder {
+    font-weight: 300;
+    color: #ccc;
+  }
+  .search__button {
+    background: none;
+    border: none;
+    margin-left: -45px;
+    cursor: pointer;
+  }
+  .search__icon {
+    height: 1.5em;
+    width: 1.5em;
+    fill: #646464;
+    transition: fill 0.3s ease;
+  }
+  .search__button:hover .search__icon {
+    fill: #000;
+  }
+
+  .green-circle {
+    color: green;
+  }
+
+  .red-circle {
+    color: red;
+  }
+
+
+   .otc{
+    margin-right: 300px;
+   }
+
+   .pdfbtn{
+    margin-left: 83%;
+    margin-top: -58px;
+   }

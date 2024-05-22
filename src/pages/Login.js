@@ -6,6 +6,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { adminlogin } from "../services/allApi";
 
 function Login() {
@@ -33,25 +34,28 @@ function Login() {
         return;
       }
       const response = await adminlogin(formData);
+      const {id}=response.data;
       console.log('Response:', response); // Log the response to see it in the console
       if (response.status === 200) {
         setError('');
         toast.success('Login successful');
+        localStorage.setItem('ido',id)
         navigate('/');
       } else {
-        setError('Login failed');
-        toast.error('Login failed');
+        setError('Invalid Username or Password');
+        toast.error('Invalid Username or Password');
       }
     } catch (error) {
       console.error('Login Error:', error); // Log any errors
-      setError('Login failed');
-      toast.error('Login failed');
+      setError('Invalid Username or Password');
+      toast.error('Invalid Username or Password');
     }
   };
 
   return (
     <div style={{ width: "100%" }} className="containers">
-      <div
+      <ToastContainer />
+      <div 
         style={{
           display: "flex",
           alignItems: "center",

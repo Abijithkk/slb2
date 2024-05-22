@@ -1,222 +1,285 @@
 .profile-wrapper {
-    overflow-x: hidden;
-  }
+  overflow-x: hidden;
+}
+.profile-container {
+  display: flex;
+}
+.menu {
+  background-color: #FFFFFF;
+  color: #000000;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.14);
+}
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.profile-image img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-left: 100px;
+}
+.menu-items {
+  list-style: none;
+  padding: 0;
+}
+.menu-items li {
+  padding: 5px 0;
+}
+.content {
+  padding: 10px;
+}
+@media (max-width: 768px) {
   .profile-container {
-    display: flex;
-  }
-  .menu {
-    background-color: #FFFFFF;
-    color: #000000;
-    padding: 10px;
-    border-radius: 12px;
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.14);
-  }
-  .profile-info {
-    display: flex;
     flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
   }
-  .profile-image img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
+  .menu, .content {
+    flex-basis: auto;
   }
-  .menu-items {
-    list-style: none;
-    padding: 0;
-  }
-  .menu-items li {
-    padding: 5px 0;
-  }
-  .content {
-    padding: 10px;
-  }
-  @media (max-width: 768px) {
-    .profile-container {
-      flex-direction: column;
-    }
-    .menu, .content {
-      flex-basis: auto;
-    }
-  }
-  .progress-container{
+}
+.progress-container{
 margin-top: 10px;
-  }
-  .progress-bar {
-    background-color: #28A745;
-  }
-  /* Existing CSS styles remain unchanged */
+}
+.progress-bar {
+  background-color: #28A745;
+}
+/* Existing CSS styles remain unchanged */
 .form-heading {
-    margin-top: 20px;
-    font-family: Inter;
+  margin-top: 20px;
+  font-family: Inter;
 font-size: 16px;
 font-weight: 700;
 line-height: 23.04px;
 text-align: center;
-  }
-  .training-form {
-    margin-top: 10px;
-  }
-  .form-row {
-    display: flex;
-    margin-bottom: 10px;
-  }
-  .form-col-left {
-    flex: 1;
-    border-bottom: 1px solid #333;
-    white-space: nowrap;
-    font-family: Inter;
+}
+.training-form {
+  margin-top: 10px;
+}
+.form-row {
+  display: flex;
+  margin-bottom: 10px;
+}
+.form-col-left {
+  flex: 1;
+  border-bottom: 1px solid #333;
+  white-space: nowrap;
+  font-family: Inter;
 font-size: 14px;
 font-weight: 400;
 line-height: 23.04px;
 text-align: left;
-  }
-  .form-col-right {
-    flex: 2;
-    border-bottom: 1px solid #333;
-    text-align: end;
-    font-family: Inter;
+}
+.form-col-right {
+  flex: 2;
+  border-bottom: 1px solid #333;
+  text-align: end;
+  font-family: Inter;
 font-size: 14px;
 font-weight: 400;
 line-height: 23.04px;
-  }
-  .heading-section {
-    margin-bottom: 20px;
-  }
-  .heading-list {
-    display: flex;
-    white-space: nowrap;
-    border-radius: 10px; /* Adjust border radius as needed */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Adjust box shadow as needed */
-    padding: 10px;
-    font-size: 13px;
-    font-weight: bold;
-  }
-  .heading {
-    cursor: pointer;
-    margin-right: 20px;
-    padding-bottom: 5px;
-    border-bottom: 2px solid transparent;
-  }
-  .heading.selected {
-    border-color: #007BFF; /* Blue underline color */
-  }
-  .content-gap {
-    margin-top: 20px;
-  }
-  /* Existing CSS styles remain unchanged */
-.training-content {
+}
+.heading-section {
+  margin-bottom: 20px;
+}
+.heading-list {
+  display: flex;
+  white-space: nowrap;
+  border-radius: 10px; /* Adjust border radius as needed */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Adjust box shadow as needed */
+  padding: 10px;
+  font-size: 13px;
+  font-weight: bold;
+}
+.heading {
+  cursor: pointer;
+  margin-right: 20px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid transparent;
+}
+.heading.selected {
+  border-color: #007BFF; /* Blue underline color */
+}
+.content-gap {
   margin-top: 20px;
 }
 /* Existing CSS styles remain unchanged */
+.training-content {
+margin-top: 20px;
+}
+/* Existing CSS styles remain unchanged */
 .progress-container {
-    display: flex;
-    flex-direction: column;
-  }
-  .progress-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .progress-wrapper {
-    width: 50%;
-    margin-right: 10px;
-  }
-  .date-selectors {
-    display: flex;
-    align-items: center;
-  }
-  button {
-    margin-left: 10px;
-  }
-  .training-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .heading {
-    margin-right: 20px;
-    padding-bottom: 5px;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-  }
-  .heading.selected {
-    border-color: #007BFF;
-  }
-  .heading-list {
-    display: flex;
-  }
-  #name{
-    font-family: Inter;
+  display: flex;
+  flex-direction: column;
+}
+.progress-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.progress-wrapper {
+  width: 50%;
+  margin-right: 10px;
+}
+.date-selectors {
+  display: flex;
+  align-items: center;
+}
+button {
+  margin-left: 10px;
+}
+.training-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.heading {
+  margin-right: 20px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.heading.selected {
+  border-color: #007BFF;
+}
+.heading-list {
+  display: flex;
+}
+#name{
+  font-family: Inter;
 font-size: 24px;
 font-weight: 600;
 line-height: 23.04px;
 text-align: left;
-  }
-  #job{
-    font-family: Inter;
+}
+#job{
+  font-family: Inter;
 font-size: 14px;
 font-weight: 400;
 line-height: 21px;
 letter-spacing: -0.019em;
 text-align: center;
-  }
-  #otc{
-    font-family: Inter;
+}
+#otc{
+  font-family: Inter;
 font-size: 14px;
 font-weight: 600;
 line-height: 23.04px;
 text-align: left;
-  }
-  .progress-section{
-    background-color: rgba(255, 255, 255, 1);
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.14);
+}
+.progress-section{
+  background-color: rgba(255, 255, 255, 1);
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.14);
 padding: 12px;
 border-radius: 10px;
-  }
-  .heading-style {
-    font-family: Inter;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 24px;
-    letter-spacing: -0.019em;
-    text-align: left;
-    margin-bottom: 10px; /* Ensure spacing between heading and progress bar */
-  }
-  .base-bar{
-    width: 100%;
-    height: 7px;
-    background-color: #000000;
-    border-radius: .5rem;
-    position: absolute;
-    bottom: px;
-    left: 0px;
+}
+.heading-style {
+  font-family: Inter;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.019em;
+  text-align: left;
+  margin-bottom: 10px; /* Ensure spacing between heading and progress bar */
+}
+.base-bar{
+  width: 100%;
+  height: 7px;
+  background-color: #000000;
+  border-radius: .5rem;
+  position: absolute;
+  bottom: px;
+  left: 0px;
 }
 .first-bar{
-    background-color: #D53232;
-    width: 47%;
+  background-color: #D53232;
+  width: 47%;
 }
 .bar-container{
-    display: flex;
-    align-items: center;
-    padding: 1rem 0px;
-    margin-bottom: 1rem;
-    position: relative;
+  display: flex;
+  align-items: center;
+  padding: 1rem 0px;
+  margin-bottom: 1rem;
+  position: relative;
 }
 .skill_container{
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 2rem;
-    margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 2rem;
+  margin-top: 2rem;
 }
 /* ul li::marker {
-    color:#0d0d0d
-  } */
-  /* Profile.css */
+  color:#0d0d0d
+} */
+/* Profile.css */
 .grey-progress {
-    background-color: #F0F0F0; /* Light grey background */
-  }
-  .grey-progress .progress-bar {
-    background-color: #E0E0E0; /* Slightly darker grey for the progress */
-  }
+  background-color: #F0F0F0; /* Light grey background */
+}
+.grey-progress .progress-bar {
+  background-color: #E0E0E0; /* Slightly darker grey for the progress */
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 75px; /* Reduced width */
+  height: 20px; /* Reduced height */
+  margin-top: 10px; /* Optional: Adjust top margin to align vertically */
+  margin-left: 224px; /* Position the switch */
+}
+.switch input {
+  display: none;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #3C3C3C;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 20px; /* Adjust border radius according to height */
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px; /* Adjust size according to switch height */
+  width: 16px;
+  left: 2px; /* Adjust left position */
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #0E6EB8;
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+input:checked + .slider:before {
+  -webkit-transform: translateX(53px); /* Adjust translateX value to move to the right */
+  -ms-transform: translateX(53px);
+  transform: translateX(53px);
+}
+/* Added CSS */
+.slider:after {
+  content: 'OFF Duty';
+  white-space: nowrap;
+  color: white;
+  display: block;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  font-size: 8px; /* Reduced font size */
+  font-family: Verdana, sans-serif;
+}
+input:checked + .slider:after {
+  content: 'ON Duty';
+}
