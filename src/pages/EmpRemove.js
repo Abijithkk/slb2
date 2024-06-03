@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Button, Col, Row } from "react-bootstrap";
+import { Button, Col, Row, Spinner } from "react-bootstrap";
 import Swal from "sweetalert2";
 import { removeUser, deleteUser, fetchNotifications } from "../services/allApi";
 import Header from "../components/Header";
+import "./EmpReq.css"; // Create and import a CSS file for custom styles
 
 function EmpRemove() {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [usersPerPage] = useState(10); // Number of users to display per page
+    const [loading, setLoading] = useState(true);
 
     const profileCardStyle = {
         padding: "20px",
@@ -20,12 +22,15 @@ function EmpRemove() {
 
     useEffect(() => {
         const fetchUsers = async () => {
+            setLoading(true);
             try {
                 const response = await removeUser();
                 console.log("Fetched users:", response.data);
                 setUsers(response.data);
             } catch (error) {
                 console.error("Error fetching users:", error);
+            } finally {
+                setLoading(false);
             }
         };
         fetchUsers();
@@ -95,6 +100,14 @@ function EmpRemove() {
         }
     };
 
+    if (loading) {
+        return (
+            <div className="spinner-container">
+                <Spinner animation="border" variant="primary" />
+            </div>
+        );
+    }
+
     return (
         <div>
             <Header notificationCount={notificationCount} />
@@ -138,11 +151,11 @@ function EmpRemove() {
                                         Remove Employee
                                     </Button>
                                 </Col>
-                                <Col md={3}>
+                                {/* <Col md={3}>
                                     <Button variant="secondary" className="w-50 mt-3">
                                         Cancel
                                     </Button>
-                                </Col>
+                                </Col> */}
                             </div>
                         </Row>
                     </div>

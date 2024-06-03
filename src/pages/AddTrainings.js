@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Header from '../components/Header';
-import { fetchNotifications } from '../services/allApi';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Modal from 'react-modal';
+import { BASE_URL } from '../services/baseUrl';
+
+Modal.setAppElement('#root'); 
 
 function AddTrainings() {
   const [mainTrainings, setMainTrainings] = useState([]);
@@ -12,31 +17,39 @@ function AddTrainings() {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteData, setDeleteData] = useState({ id: null, type: '', mainTrainingId: null });
+
+  const formRef = useRef(null);
 
   useEffect(() => {
     fetchMainTrainings();
-    getNotificationCount();
   }, []);
 
   const fetchMainTrainings = async () => {
     try {
-      const response = await axios.get('https://codeedexbackend.pythonanywhere.com/api/view-main-trainings/');
+      const response = await axios.get(`${BASE_URL}/api/view-main-trainings/`);
       setMainTrainings(response.data);
     } catch (error) {
       console.error('Error fetching main trainings:', error);
     }
   };
 
+  const showToast = (message, type) => {
+    toast(message);
+  };
+
   const handleAddTraining = async () => {
     if (trainingName && (mode === 'main' || (mode === 'sub' && selectedMainTraining && validityPeriod))) {
       try {
         if (mode === 'main') {
-          const response = await axios.post('https://codeedexbackend.pythonanywhere.com/api/main-trainings/', {
+          const response = await axios.post(`${BASE_URL}/api/main-trainings/`, {
             name: trainingName,
           });
-          setMainTrainings([...mainTrainings, response.data]);
+          setMainTrainings([...mainTrainings, { ...response.data, sub_trainings: [] }]);
+          showToast('Training added successfully!', 'success');
         } else {
-          const response = await axios.post('https://codeedexbackend.pythonanywhere.com/api/sub-trainings/', {
+          const response = await axios.post(`'${BASE_URL}/api/sub-trainings/`, {
             name: trainingName,
             main_training: selectedMainTraining,
             validity_period: validityPeriod,
@@ -48,6 +61,7 @@ function AddTrainings() {
             return mt;
           });
           setMainTrainings(updatedMainTrainings);
+          showToast('Sub-training added successfully!', 'success');
         }
         setTrainingName('');
         setValidityPeriod('');
@@ -67,38 +81,45 @@ function AddTrainings() {
     } else {
       setMode('sub');
       setValidityPeriod(training.validity_period);
-      setSelectedMainTraining(mainTrainingId); // Ensure to set the mainTrainingId
+      setSelectedMainTraining(mainTrainingId); 
       setEditingIndex(index);
-      setEditingId(training.id);
+      setEditingId(training.subtraining_id); 
     }
+    formRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSaveEdit = async () => {
     try {
       if (mode === 'main') {
-        await axios.put(`https://codeedexbackend.pythonanywhere.com/api/main-trainings/${editingId}/`, {
+        await axios.put(`${BASE_URL}/api/main-trainings/${editingId}/`, {
           name: trainingName,
         });
+        console.log(editingId);
         const updatedMainTrainings = mainTrainings.map((mt, index) =>
           index === editingIndex ? { ...mt, name: trainingName } : mt
         );
         setMainTrainings(updatedMainTrainings);
+        showToast('Training updated successfully!', 'success');
       } else {
-        const response = await axios.put(`https://codeedexbackend.pythonanywhere.com/api/sub-trainings/${editingId}/`, {
+        const response = await axios.put(`${BASE_URL}/api/sub-trainings/${editingId}/`, {
+          subtraining_id: editingId, // Include subtraining_id in the request payload
           name: trainingName,
           main_training: selectedMainTraining,
           validity_period: validityPeriod,
         });
+        console.log(validityPeriod);
+        console.log(editingId);
         const updatedMainTrainings = mainTrainings.map(mt => {
           if (mt.id === selectedMainTraining) {
-            const updatedSubTrainings = mt.sub_trainings.map((st, subIndex) =>
-              st.id === editingId ? response.data : st
+            const updatedSubTrainings = mt.sub_trainings.map((st) =>
+              st.subtraining_id === editingId ? response.data : st
             );
             return { ...mt, sub_trainings: updatedSubTrainings };
           }
           return mt;
         });
         setMainTrainings(updatedMainTrainings);
+        showToast('Sub-training updated successfully!', 'success');
       }
       setTrainingName('');
       setValidityPeriod('');
@@ -110,34 +131,40 @@ function AddTrainings() {
     }
   };
 
-  const handleDeleteTraining = async (id, type, mainTrainingId) => {
+  const openDeleteModal = (id, type, mainTrainingId = null) => {
+    setDeleteData({ id, type, mainTrainingId });
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    const { id, type, mainTrainingId } = deleteData;
     try {
       if (type === 'main') {
-        await axios.delete(`https://codeedexbackend.pythonanywhere.com/api/main-trainings/${id}/`);
+        await axios.delete(`${BASE_URL}/api/main-trainings/${id}/`);
         setMainTrainings(mainTrainings.filter(mt => mt.id !== id));
       } else {
-        await axios.delete(`https://codeedexbackend.pythonanywhere.com/api/sub-trainings/${id}/`);
+        await axios.delete(`${BASE_URL}/api/sub-trainings/${id}/`);
         const updatedMainTrainings = mainTrainings.map(mt => {
           if (mt.id === mainTrainingId) {
-            const updatedSubTrainings = mt.sub_trainings.filter(st => st.id !== id);
+            const updatedSubTrainings = mt.sub_trainings.filter(st => st.subtraining_id !== id); // Use subtraining_id
             return { ...mt, sub_trainings: updatedSubTrainings };
           }
           return mt;
         });
         setMainTrainings(updatedMainTrainings);
+        showToast('Sub-training deleted successfully!', 'success');
       }
+      showToast('Training deleted successfully!', 'success');
     } catch (error) {
       console.error(`Error deleting ${type} training:`, error);
+      showToast('Error deleting training!', 'error');
+    } finally {
+      setIsModalOpen(false);
     }
   };
 
-  const getNotificationCount = async () => {
-    try {
-      const notifications = await fetchNotifications();
-      setNotificationCount(notifications.length);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
+  const handleCancelDelete = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -151,7 +178,7 @@ function AddTrainings() {
             <option value="sub">Sub Training</option>
           </select>
         </div>
-        <div style={styles.form}>
+        <div ref={formRef} style={styles.form}>
           {mode === 'sub' && (
             <select
               value={selectedMainTraining}
@@ -174,13 +201,20 @@ function AddTrainings() {
             style={styles.input}
           />
           {mode === 'sub' && (
-            <input
-              type="text"
+            <select
               value={validityPeriod}
               onChange={e => setValidityPeriod(e.target.value)}
-              placeholder="Enter validity period"
               style={styles.input}
-            />
+            >
+              <option value="">Select Validity Period</option>
+              <option value="6 months">6 months</option>
+              <option value="1 year">1 year</option>
+              <option value="2 years">2 years</option>
+              <option value="3 years">3 years</option>
+              <option value="4 years">4 years</option>
+              <option value="5 years">5 years</option>
+              <option value="Permanent">Permanent</option>
+            </select>
           )}
           {editingIndex !== null ? (
             <button onClick={handleSaveEdit} style={styles.saveButton}>
@@ -200,39 +234,47 @@ function AddTrainings() {
                 <button onClick={() => handleEditTraining(index, mainTraining, 'main')} style={styles.editButton}>
                   Edit
                 </button>
-                <button onClick={() => handleDeleteTraining(mainTraining.id, 'main')} style={styles.deleteButton}>
+                <button onClick={() => openDeleteModal(mainTraining.id, 'main')} style={styles.deleteButton}>
                   Delete
                 </button>
               </div>
-              {mainTraining.sub_trainings && mainTraining.sub_trainings.length > 0 && (
-                <div style={styles.subTrainingList}>
-                  {mainTraining.sub_trainings.map((subTraining, subIndex) => (
-                    <div key={subTraining.id} style={styles.subTrainingItem}>
-                      <span style={styles.subTrainingName}>
-                        {subTraining.name} (Valid: {subTraining.validity_period})
-                      </span>
-                      <div>
-                        <button
-                          onClick={() => handleEditTraining(subIndex, subTraining, 'sub', mainTraining.id)}
-                          style={styles.editButton}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTraining(subTraining.id, 'sub', mainTraining.id)}
-                          style={styles.deleteButton}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+              {(mainTraining.sub_trainings || []).map((subTraining, subIndex) => (
+                <div key={subTraining.subtraining_id} style={styles.subTrainingItem}>
+                  <span style={styles.subTrainingName}>
+                    {subTraining.name} (Valid: {subTraining.validity_period})
+                  </span>
+                  <div>
+                    <button
+                      onClick={() => handleEditTraining(subIndex, subTraining, 'sub', mainTraining.id)}
+                      style={styles.editButton}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => openDeleteModal(subTraining.subtraining_id, 'sub', mainTraining.id)}
+                      style={styles.deleteButton}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           ))}
         </div>
       </div>
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={handleCancelDelete}
+        contentLabel="Confirm Delete"
+        style={modalStyles}
+      >
+        <h2>Confirm Delete</h2>
+        <p>Are you sure you want to delete this training?</p>
+        <button onClick={handleConfirmDelete} style={styles.deleteButton}>Confirm</button>
+        <button onClick={handleCancelDelete} style={styles.cancelButton}>Cancel</button>
+      </Modal>
+      <ToastContainer />
     </div>
   );
 }
@@ -302,7 +344,7 @@ const styles = {
     fontSize: '16px',
   },
   editButton: {
-    backgroundColor: '#FFC107',
+    backgroundColor: 'blue',
     color: '#fff',
     padding: '10px 15px',
     border: 'none',
@@ -321,6 +363,17 @@ const styles = {
     cursor: 'pointer',
     transition: 'background-color 0.3s ease',
     fontSize: '14px',
+  },
+  cancelButton: {
+    backgroundColor: '#6C757D',
+    color: '#fff',
+    padding: '10px 15px',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+    fontSize: '14px',
+    marginLeft: '5px',
   },
   trainingList: {
     listStyle: 'none',
@@ -357,4 +410,22 @@ const styles = {
     color: '#333',
   },
 };
+
+const modalStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    padding: '20px',
+    borderRadius: '10px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    width: '400px',
+    maxWidth: '80%',
+    textAlign: 'center',
+  },
+};
+
 export default AddTrainings;

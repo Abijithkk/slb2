@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import Header from '../components/Header';
 import { fetchNotifications } from '../services/allApi';
-
+import { BASE_URL } from '../services/baseUrl';
 
 function AddCompany() {
   const [companies, setCompanies] = useState([]);
@@ -14,7 +15,7 @@ function AddCompany() {
   }, []);
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('https://codeedexbackend.pythonanywhere.com/api/viewcompanies/');
+      const response = await axios.get(`${BASE_URL}/api/viewcompanies/`);
       setCompanies(response.data);
     } catch (error) {
       console.error('Error fetching companies:', error);
@@ -23,7 +24,7 @@ function AddCompany() {
   const handleAddCompany = async () => {
     if (companyName) {
       try {
-        const response = await axios.post('https://codeedexbackend.pythonanywhere.com/api/create-companies/', {
+        const response = await axios.post(`${BASE_URL}/api/create-companies/`, {
           name: companyName,
         });
         setCompanies([...companies, response.data]);
@@ -40,7 +41,7 @@ function AddCompany() {
   };
   const handleSaveEdit = async () => {
     try {
-      await axios.put(`https://codeedexbackend.pythonanywhere.com/api/companies/${editingId}/`, {
+      await axios.put(`${BASE_URL}/api/companies/${editingId}/`, {
         name: companyName,
       });
       const updatedCompanies = companies.map((company, index) =>
@@ -56,70 +57,88 @@ function AddCompany() {
   };
   const handleDeleteCompany = async id => {
     try {
-      await axios.delete(`https://codeedexbackend.pythonanywhere.com/api/companies/${id}/`);
+      await axios.delete(`${BASE_URL}/api/companies/${id}/`);
       setCompanies(companies.filter(company => company.id !== id));
     } catch (error) {
       console.error('Error deleting company:', error);
     }
   };
-
- // Notification count
- const [notificationCount, setNotificationCount] = useState(0);
- useEffect(() => {
-   getNotificationCount();
- }, []);
- const getNotificationCount = async () => {
-   try {
-     const notifications = await fetchNotifications();
-     setNotificationCount(notifications.length);
-   } catch (error) {
-     console.error('Error fetching notifications:', error);
-   }
- };
-
+  const confirmDeleteCompany = id => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085D6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleDeleteCompany(id);
+        Swal.fire(
+          'Deleted!',
+          'Your company has been deleted.',
+          'success'
+        );
+      }
+    });
+  };
+  // Notification count
+  const [notificationCount, setNotificationCount] = useState(0);
+  useEffect(() => {
+    getNotificationCount();
+  }, []);
+  const getNotificationCount = async () => {
+    try {
+      const notifications = await fetchNotifications();
+      setNotificationCount(notifications.length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
   return (
     <div>
-        <Header notificationCount={notificationCount} ></Header>
-        <div style={styles.app}>
-          <h1 style={styles.header}>Edit Company</h1>
-          <div style={styles.projectForm}>
-            <input
-              type="text"
-              value={companyName}
-              onChange={e => setCompanyName(e.target.value)}
-              placeholder="Enter company name"
-              style={styles.input}
-            />
-            {editingIndex !== null ? (
-              <button onClick={handleSaveEdit} style={{ ...styles.button, ...styles.saveButton }}>
-                Save Edit
-              </button>
-            ) : (
-              <button onClick={handleAddCompany} style={{ ...styles.button, ...styles.addButton }}>
-                Add Company
-              </button>
-            )}
-          </div>
-          <div style={styles.projectList}>
-            {companies.map((company, index) => (
-              <div key={company.id} style={styles.projectItem}>
-                <span style={styles.projectName}>{company.name}</span>
-                <button
-                  onClick={() => handleEditCompany(index)}
-                  style={{ ...styles.button, ...styles.editButton }}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteCompany(company.id)}
-                  style={{ ...styles.button, ...styles.deleteButton }}
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-          </div>
+      <Header notificationCount={notificationCount} />
+      <div style={styles.app}>
+        <h1 style={styles.header}>Edit Company</h1>
+        <div style={styles.projectForm}>
+          <input
+            type="text"
+            value={companyName}
+            onChange={e => setCompanyName(e.target.value)}
+            placeholder="Enter company name"
+            style={styles.input}
+          />
+          {editingIndex !== null ? (
+            <button onClick={handleSaveEdit} style={{ ...styles.button, ...styles.saveButton }}>
+              Save Edit
+            </button>
+          ) : (
+            <button onClick={handleAddCompany} style={{ ...styles.button, ...styles.addButton }}>
+              Add Company
+            </button>
+          )}
         </div>
+        <div style={styles.projectList}>
+          {companies.map((company, index) => (
+            <div key={company.id} style={styles.projectItem}>
+              <span style={styles.projectName}>{company.name}</span>
+              <button
+                onClick={() => handleEditCompany(index)}
+                style={{ ...styles.button, ...styles.editButton }}
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => confirmDeleteCompany(company.id)}
+                style={{ ...styles.button, ...styles.deleteButton }}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -168,7 +187,7 @@ const styles = {
     backgroundColor: '#17A2B8',
   },
   editButton: {
-    backgroundColor: '#FFC107',
+    backgroundColor: 'blue',
     marginLeft: '10px',
   },
   deleteButton: {
@@ -196,7 +215,3 @@ const styles = {
   },
 };
 export default AddCompany;
-
-
-
-

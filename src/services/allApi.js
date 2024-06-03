@@ -154,6 +154,6 @@ export const getOverallTrainingOTC = async (employeeId) => {
     return data;
   } catch (error) {
     console.error("Error fetching overall training OTC:", error);
-    throw error; // Re-throw the error for handling in the component
+    throw error; 
   }
 };

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Col, Row, Pagination } from "react-bootstrap";
+import { Col, Row, Pagination, Spinner } from "react-bootstrap";
 import Swal from "sweetalert2";
 import { fetchNotifications, updateUserStatus, userrequest } from "../services/allApi";
 import Header from "../components/Header";
+import "./EmpReq.css"; // Create and import a CSS file for custom styles
 
 function EmpReq() {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(true);
     const itemsPerPage = 10;
 
     const profileCardStyle = {
@@ -20,6 +22,7 @@ function EmpReq() {
 
     useEffect(() => {
         const fetchUsers = async () => {
+            setLoading(true);
             try {
                 const response = await userrequest();
                 console.log("Response:", response);
@@ -27,6 +30,8 @@ function EmpReq() {
                 setUsers(filteredUsers);
             } catch (error) {
                 console.error("Error fetching users:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -48,12 +53,12 @@ function EmpReq() {
                 return;
             }
         }
-
+    
         try {
             const response = await updateUserStatus(userId, action);
             console.log(`${action} response:`, response);
             if (response.status === 200) {
-                setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+                setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
                 if (action === 'accept') {
                     Swal.fire({
                         position: "top-center",
@@ -62,18 +67,29 @@ function EmpReq() {
                         showConfirmButton: false,
                         timer: 1500
                     });
+                    
                 } else if (action === 'reject') {
+                    // Display toast notification for rejection
+                    // You can also use a library like react-toastify for better UI
                     Swal.fire({
                         title: "Removed!",
                         text: "The user has been rejected.",
-                        icon: "success"
+                        icon: "success",
+                        showConfirmButton: false,
+                        timer: 1500
+                        
+                    }).then(() => {
+                        
                     });
                 }
             }
+            window.location.reload(); // Reload the page after successful reject
+
         } catch (error) {
             console.error(`Error ${action} user:`, error);
         }
     };
+    
 
     // Pagination Logic
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -97,6 +113,13 @@ function EmpReq() {
         }
     };
 
+    if (loading) {
+        return (
+            <div className="spinner-container">
+                <Spinner animation="border" variant="primary" />
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -156,7 +179,6 @@ function EmpReq() {
                     </div>
                 ))}
 
-                {/* Pagination Component */}
                 <Pagination className="mt-3">
                     {[...Array(Math.ceil(users.length / itemsPerPage)).keys()].map(number => (
                         <Pagination.Item

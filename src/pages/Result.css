@@ -35,7 +35,7 @@
   .search__icon {
     height: 1.5em;
     width: 1.5em;
-    fill: #646464;
+    fill: #cdcdcd;
     transition: fill 0.3s ease;
   }
   .search__button:hover .search__icon {
@@ -59,3 +59,9 @@
     margin-left: 83%;
     margin-top: -58px;
    }
+
+   @media (max-width: 1900px) {
+    .otc{
+      margin-right: 325px;
+     }
+}

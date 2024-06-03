@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from '../components/Header';
 import { fetchNotifications } from '../services/allApi';
+import { BASE_URL } from '../services/baseUrl';
 
 
 function AddProject() {
@@ -14,7 +15,7 @@ function AddProject() {
   }, []);
   const fetchProjects = async () => {
     try {
-      const response = await axios.get('https://codeedexbackend.pythonanywhere.com/api/viewprojects/');
+      const response = await axios.get(`${BASE_URL}/api/viewprojects/`);
       setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -23,7 +24,7 @@ function AddProject() {
   const handleAddProject = async () => {
     if (projectName) {
       try {
-        const response = await axios.post('https://codeedexbackend.pythonanywhere.com/api/create-project/', {
+        const response = await axios.post(`${BASE_URL}/api/create-project/`, {
           name: projectName,
         });
         setProjects([...projects, response.data]);
@@ -40,7 +41,7 @@ function AddProject() {
   };
   const handleSaveEdit = async () => {
     try {
-      await axios.put(`https://codeedexbackend.pythonanywhere.com/api/updateprojects/${editingId}/`, {
+      await axios.put(`${BASE_URL}/api/updateprojects/${editingId}/`, {
         name: projectName,
       });
       const updatedProjects = projects.map((project, index) =>
@@ -56,7 +57,7 @@ function AddProject() {
   };
   const handleDeleteProject = async id => {
     try {
-      await axios.delete(`https://codeedexbackend.pythonanywhere.com/api/delprojects/${id}/`);
+      await axios.delete(`${BASE_URL}/api/delprojects/${id}/`);
       setProjects(projects.filter(project => project.id !== id));
     } catch (error) {
       console.error('Error deleting project:', error);
@@ -176,7 +177,7 @@ const styles = {
     flexGrow: 1,
   },
   editButton: {
-    backgroundColor: '#FFC107',
+    backgroundColor: 'blue',
   },
   deleteButton: {
     backgroundColor: '#DC3545',

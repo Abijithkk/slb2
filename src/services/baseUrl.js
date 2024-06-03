@@ -1,1 +1,1 @@
-export const BASE_URL="https://codeedexbackend.pythonanywhere.com"
+export const BASE_URL="https://codeedexpython.pythonanywhere.com"

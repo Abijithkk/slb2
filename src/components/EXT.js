@@ -1,77 +1,77 @@
-import React, { useEffect, useState } from "react";
-import { Button, Col, ProgressBar, Row, Modal } from "react-bootstrap";
+import React, { useEffect, useState, useRef } from "react";
+import { Button, Col, ProgressBar, Row, Modal, Form } from "react-bootstrap";
 import "../pages/Profile.css";
 import { BASE_URL } from "../services/baseUrl";
-function EXT() {
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUpload, faDownload } from "@fortawesome/free-solid-svg-icons";
+
+function EXT({ mainTrainingId }) {
   const [trainings, setTrainings] = useState([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({});
   const [addedTrainings, setAddedTrainings] = useState({});
-  const [trainingProgress, setTrainingProgress] = useState({});
+  const [trainingProgress, setTrainingProgress] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [subtrainingToRemove, setSubtrainingToRemove] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedTrainingId, setSelectedTrainingId] = useState(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [employeeSubTrainingIdToVerify, setEmployeeSubTrainingIdToVerify] =
+    useState(null);
   const employeeId = sessionStorage.getItem("userid");
+  const fileInputRef = useRef(null);
+
   const fetchData = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/sub-trainings-main/`);
+      const response = await fetch(
+        `${BASE_URL}/api/main-training/${mainTrainingId}/sub-trainings/`
+      );
       if (!response.ok) {
-        throw new Error('Failed to fetch data');
+        throw new Error("Failed to fetch data");
       }
       const data = await response.json();
-      const filteredTrainings = data.filter(training => training.main_training_name === "External Training");
-      setTrainings(filteredTrainings);
-      const progressResponse = await fetch(`${BASE_URL}/api/employee/${employeeId}/main-training/1/`);
+      setTrainings(data);
+      const progressResponse = await fetch(
+        `${BASE_URL}/api/employee/${employeeId}/main-training/${mainTrainingId}/`
+      );
       if (!progressResponse.ok) {
-        throw new Error('Failed to fetch progress data');
+        throw new Error("Failed to fetch progress data");
       }
       const progressData = await progressResponse.json();
-      const progressMap = {};
-      progressData.forEach(progress => {
-        progressMap[progress.sub_training_name] = {
-          completion_percentage: progress.completion_percentage || 0,
-          expiration_date: progress.expiration_date || ''
-        };
-      });
-      setTrainingProgress(progressMap);
+      setTrainingProgress(progressData);
     } catch (error) {
-      console.error('Error fetching training data:', error);
+      console.error("Error fetching training data:", error);
     }
   };
+
   useEffect(() => {
     fetchData();
-  }, [employeeId]);
+  }, [employeeId, mainTrainingId]);
+
   const handleAddClick = (trainingId) => {
-    const employee = sessionStorage.getItem('userid');
+    const employee = sessionStorage.getItem("userid");
     const currentDate = new Date();
-    const day = currentDate.getDate();
-    const month = currentDate.getMonth() + 1;
-    const year = currentDate.getFullYear();
-    const formattedCurrentDate = `${day < 10 ? '0' + day : day}-${month < 10 ? '0' + month : month}-${year}`;
-    setFormData(prevState => ({
+    const formattedCurrentDate = currentDate.toISOString().split("T")[0];
+    setFormData((prevState) => ({
       ...prevState,
       [trainingId]: {
         ...prevState[trainingId],
         employee: employee,
         sub_training: trainingId,
-        start_date: prevState[trainingId]?.start_date ? prevState[trainingId].start_date : formattedCurrentDate,
+        start_date: prevState[trainingId]?.start_date || formattedCurrentDate,
       },
     }));
-    setAddedTrainings(prevState => ({
+    setAddedTrainings((prevState) => ({
       ...prevState,
       [trainingId]: true,
     }));
-    setTrainingProgress(prevState => ({
-      ...prevState,
-      [trainingId]: {
-        ...prevState[trainingId],
-        completion_percentage: prevState[trainingId]?.completion_percentage || 0,
-      },
-    }));
   };
-  const handleRemoveClick = async (trainingId) => {
+
+  const handleRemoveClick = async (subTrainingId) => {
     try {
       const response = await fetch(
-        `${BASE_URL}/api/employees/${employeeId}/subtrainings/${trainingId}/`,
+        `${BASE_URL}/api/employees/${employeeId}/subtrainings/${subTrainingId}/`,
         {
           method: "DELETE",
         }
@@ -79,18 +79,16 @@ function EXT() {
       if (!response.ok) {
         throw new Error("Failed to delete training");
       }
-      setTrainingProgress(prevState => {
-        const updatedProgress = { ...prevState };
-        delete updatedProgress[trainingId];
-        return updatedProgress;
-      });
-      setAddedTrainings(prevState => ({
+      setTrainingProgress((prevState) =>
+        prevState.filter((item) => item.sub_training_id !== subTrainingId)
+      );
+      setAddedTrainings((prevState) => ({
         ...prevState,
-        [trainingId]: false,
+        [subTrainingId]: false,
       }));
-      setFormData(prevState => {
+      setFormData((prevState) => {
         const updatedFormData = { ...prevState };
-        delete updatedFormData[trainingId];
+        delete updatedFormData[subTrainingId];
         return updatedFormData;
       });
       fetchData();
@@ -98,20 +96,25 @@ function EXT() {
       console.error("Error deleting training data:", error);
     }
   };
+
   const handleShowModal = (trainingId) => {
     setSubtrainingToRemove(trainingId);
     setShowModal(true);
   };
+
   const handleCloseModal = () => {
     setShowModal(false);
   };
+
   const handleConfirmRemove = () => {
     handleRemoveClick(subtrainingToRemove);
     setShowModal(false);
   };
+
   const handleUpdateClick = () => {
     setIsEditMode(true);
   };
+
   const handleSubmitClick = async () => {
     setIsEditMode(false);
     for (const trainingId in formData) {
@@ -137,20 +140,17 @@ function EXT() {
       }
     }
   };
+
   const handleCancelClick = () => {
     setIsEditMode(false);
   };
+
   const handleInputChange = (event, trainingId) => {
     const { name, value } = event.target;
     let formattedValue = value;
-    if (name === "start_date") {
+    if (name === "start_date" && value) {
       const dateObj = new Date(value);
-      const day = dateObj.getDate();
-      const month = dateObj.getMonth() + 1;
-      const year = dateObj.getFullYear();
-      formattedValue = `${day < 10 ? "0" + day : day}-${
-        month < 10 ? "0" + month : month
-      }-${year}`;
+      formattedValue = dateObj.toISOString().split("T")[0];
     }
     setFormData((prevState) => ({
       ...prevState,
@@ -160,60 +160,293 @@ function EXT() {
       },
     }));
   };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    const maxSize = 1 * 1024 * 1024;
+    if (file && file.size > maxSize) {
+      alert("File size exceeds the 1MB limit. Please select a smaller file.");
+      setSelectedFile(null);
+      fileInputRef.current.value = null;
+    } else {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUploadCertificate = async (employeeSubTrainingId) => {
+    if (!selectedFile || !selectedTrainingId) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("employee", employeeId);
+    formData.append("pdf", selectedFile);
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/employee-sub-trainings/${employeeSubTrainingId}/update-pdf/`,
+        {
+          method: "PATCH",
+          body: formData,
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to upload certificate");
+      }
+
+      const verifyResponse = await fetch(
+        `${BASE_URL}/api/employee-sub-training/${employeeSubTrainingId}/verify-pdf/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ verify_pdf: true }),
+        }
+      );
+      if (!verifyResponse.ok) {
+        throw new Error("Failed to verify certificate");
+      }
+
+      alert("Certificate uploaded and verified successfully");
+      setSelectedFile(null);
+      setSelectedTrainingId(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error uploading or verifying certificate:", error);
+      alert("Error uploading or verifying certificate");
+    }
+  };
+
+  const handleCertificateButtonClick = (employeeSubTrainingId) => {
+    setSelectedTrainingId(employeeSubTrainingId);
+    fileInputRef.current.click();
+  };
+
+  const handleVerifyButtonClick = (employeeSubTrainingId) => {
+    setEmployeeSubTrainingIdToVerify(employeeSubTrainingId);
+    setShowVerifyModal(true);
+  };
+
+  const handleVerifyClose = () => {
+    setShowVerifyModal(false);
+    setVerificationStatus(null);
+  };
+
+  const handleVerificationChange = (event) => {
+    setVerificationStatus(event.target.value);
+  };
+
+  const handleVerificationSubmit = async () => {
+    if (verificationStatus === null) {
+      alert("Please select a verification status.");
+      return;
+    }
+    const verifyPdf = verificationStatus === "verify";
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/employee-sub-training/${employeeSubTrainingIdToVerify}/verify-pdf/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ verify_pdf: verifyPdf }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to verify certificate");
+      }
+      alert("Verification status updated successfully");
+      handleVerifyClose();
+      fetchData();
+    } catch (error) {
+      console.error("Error verifying certificate:", error);
+      alert("Error verifying certificate");
+    }
+  };
+
   const renderTrainingRows = () => {
     if (!trainings || trainings.length === 0) {
       return <div>No training data available</div>;
     }
-    const sortedTrainings = [...trainings].sort((a, b) => {
-      const completionA = trainingProgress[a.name]?.completion_percentage || 0;
-      const completionB = trainingProgress[b.name]?.completion_percentage || 0;
-      return completionB - completionA;
-    });
-    return sortedTrainings.map((training, index) => (
-      <Row key={index}>
-        <p><b>{training.name}</b></p>
-        <Col md={6}>
-          <div className="bar-container" style={{ width: '100%' }}>
-            <ProgressBar
-              style={{ height: '16px' }}
-              variant={trainingProgress[training.name]?.completion_percentage >= 95 ? "success" : "danger"}
-              className="w-100"
-              now={trainingProgress[training.name]?.completion_percentage || 0}
-              label={`${trainingProgress[training.name]?.completion_percentage || 0}%`}
-            />
-          </div>
-        </Col>
-        {(trainingProgress[training.name]?.completion_percentage > 0 || isEditMode) && (
-          <>
-            <Col md={2}>
-              <p style={{ marginTop: '-40px' }}><b>{trainingProgress[training.name]?.completion_percentage > 0 ? 'End Date' : 'Start Date'}</b></p>
-              <input
-                style={{ padding: '5px', width: '113%' }}
-                type={trainingProgress[training.name]?.completion_percentage > 0 ? "text" : "date"}
-                className="form-control"
-                name={trainingProgress[training.name]?.completion_percentage > 0 ? "expiration_date" : "start_date"}
-                value={trainingProgress[training.name]?.completion_percentage > 0 ? trainingProgress[training.name]?.expiration_date : formData[training.id]?.start_date || ''}
-                readOnly={trainingProgress[training.name]?.completion_percentage > 0}
-                onChange={(e) => handleInputChange(e, training.id)}
+
+    return trainings.map((training, index) => {
+      const trainingData = trainingProgress.find(
+        (item) => item.sub_training_name === training.name
+      );
+      const employeeSubTrainingId = trainingData?.employee_sub_training_id;
+      const pdfUrl = trainingData?.pdf;
+      const verifyPdf = trainingData?.verify_pdf;
+      console.log("Training Data:", trainingData);
+      return (
+        <Row key={index}>
+          <p style={{ width: "425px" }}>
+            <b>{training.name}</b>
+          </p>
+          <Col md={6}>
+            <div className="bar-container" style={{ width: "100%" }}>
+              <ProgressBar
+                style={{ height: "16px" }}
+                className="w-100"
+                variant={
+                  trainingData?.completion_percentage === 0
+                    ? "danger"
+                    : "success"
+                }
+                now={
+                  trainingData?.completion_percentage === 0 ||
+                  trainingData?.completion_percentage === 100
+                    ? 100
+                    : 0
+                }
+                label={
+                  trainingData?.completion_percentage === 0
+                    ? "Completed"
+                    : trainingData?.completion_percentage === 100
+                    ? "100%"
+                    : ""
+                }
               />
-            </Col>
-            <Col md={2}>
-              {isEditMode && (
-                <Button
-                style={{ border: '3px solid', fontWeight: 550, marginLeft: '22px' }}
-                className="w-80"
-                variant={trainingProgress[training.name]?.completion_percentage > 0 ? "outline-danger" : "outline-success"}
-                onClick={() => trainingProgress[training.name]?.completion_percentage > 0 ? handleShowModal(training.id) : handleAddClick(training.id)}
-              >
-                {trainingProgress[training.name]?.completion_percentage > 0 ? 'Remove' : (addedTrainings[training.id] ? 'Added' : 'Add')}
-              </Button>
-              )}
-            </Col>
-          </>
-        )}
-      </Row>
-    ));
+            </div>
+          </Col>
+          {(trainingData?.completion_percentage >= 0 || isEditMode) && (
+            <>
+              <Col style={{ marginInline: "auto" }} md={2}>
+                <p style={{ marginTop: "-40px" }}>
+                  <b>
+                    {trainingData?.completion_percentage >= 0
+                      ? "End Date"
+                      : "Start Date"}
+                  </b>
+                </p>
+                <input
+                  style={{ padding: "5px", width: "113%" }}
+                  type={
+                    trainingData?.completion_percentage >= 0 ? "text" : "date"
+                  }
+                  className="form-control"
+                  name={
+                    trainingData?.completion_percentage >= 0
+                      ? "expiration_date"
+                      : "start_date"
+                  }
+                  value={
+                    trainingData?.completion_percentage >= 0
+                      ? trainingData?.expiration_date || "Permanent"
+                      : formData[training.id]?.start_date || ""
+                  }
+                  readOnly={trainingData?.completion_percentage >= 0}
+                  onChange={(e) => handleInputChange(e, training.id)}
+                />
+              </Col>
+              <Col>
+                {isEditMode && (
+                  <>
+                    {["0", "100"].includes(
+                      trainingData?.completion_percentage?.toString()
+                    ) && (
+                      <>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          style={{ display: "none" }}
+                        />
+                        <Button
+                          onClick={() =>
+                            handleCertificateButtonClick(employeeSubTrainingId)
+                          }
+                        >
+                          {selectedTrainingId === employeeSubTrainingId &&
+                          selectedFile
+                            ? selectedFile.name
+                            : "Certificate"}
+                        </Button>
+                        {selectedTrainingId === employeeSubTrainingId && (
+                          <button style={{ marginLeft: "50%", width: "34%" }}>
+                            <FontAwesomeIcon
+                              icon={faUpload}
+                              onClick={() =>
+                                handleUploadCertificate(employeeSubTrainingId)
+                              }
+                            />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+
+                {pdfUrl && !isEditMode && (
+                  <>
+                    <Button
+                      style={{ whiteSpace: "nowrap" }}
+                      onClick={() => window.open(pdfUrl, "_blank")}
+                    >
+                      <FontAwesomeIcon
+                        icon={faDownload}
+                        style={{ marginLeft: "8px", whiteSpace: "nowrap" }}
+                      />{" "}
+                      Download <br /> Certificate
+                    </Button>
+                    <Button
+                      style={{
+                        marginLeft: "8px",
+                        borderColor: verifyPdf === false ? "red" : "inherit",
+                        background: verifyPdf === false ? "red" : "#0d6efd",
+                        marginTop: "-10%",
+                      }}
+                      onClick={() =>
+                        handleVerifyButtonClick(employeeSubTrainingId)
+                      }
+                      disabled={verifyPdf}
+                    >
+                      {verifyPdf === null
+                        ? "Verify"
+                        : verifyPdf
+                        ? "Verified"
+                        : "Rejected"}
+                    </Button>
+                  </>
+                )}
+              </Col>
+              <Col md={2}>
+                {isEditMode && (
+                  <Button
+                    style={{
+                      border: "3px solid",
+                      fontWeight: 550,
+                      marginLeft: "22px",
+                    }}
+                    className="w-80"
+                    variant={
+                      trainingData?.completion_percentage >= 0
+                        ? "outline-danger"
+                        : "outline-success"
+                    }
+                    onClick={() =>
+                      trainingData?.completion_percentage >= 0
+                        ? handleShowModal(training.id)
+                        : handleAddClick(training.id)
+                    }
+                  >
+                    {trainingData?.completion_percentage >= 0
+                      ? "Remove"
+                      : addedTrainings[training.id]
+                      ? "Added"
+                      : "Add"}
+                  </Button>
+                )}
+              </Col>
+            </>
+          )}
+        </Row>
+      );
+    });
   };
+
   return (
     <div>
       <div style={{ height: "auto" }} className="card shadow p-3 mt-2">
@@ -284,7 +517,42 @@ function EXT() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <Modal show={showVerifyModal} onHide={handleVerifyClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Verify Certificate</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Check
+              type="radio"
+              label="Verify"
+              name="verificationStatus"
+              value="verify"
+              checked={verificationStatus === "verify"}
+              onChange={handleVerificationChange}
+            />
+            <Form.Check
+              type="radio"
+              label="Reject"
+              name="verificationStatus"
+              value="reject"
+              checked={verificationStatus === "reject"}
+              onChange={handleVerificationChange}
+            />
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleVerifyClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleVerificationSubmit}>
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
+
 export default EXT;

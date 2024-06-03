@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import './Notification.css';
 import Header from '../components/Header';
-import { fetchNotifications, deleteNotification } from '../services/allApi'; // Assuming you have a deleteNotification function
-import { useHistory, useNavigate } from 'react-router-dom';
-
+import { fetchNotifications, deleteNotification } from '../services/allApi';
+import { useNavigate } from 'react-router-dom';
 function Notification() {
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const navigate = useNavigate();
-
   useEffect(() => {
     getNotificationCount();
+    getNotifications();
   }, []);
-
   const getNotificationCount = async () => {
     try {
       const notifications = await fetchNotifications();
@@ -21,11 +20,6 @@ function Notification() {
       console.error('Error fetching notifications:', error);
     }
   };
-
-  useEffect(() => {
-    getNotifications();
-  }, []);
-
   const getNotifications = async () => {
     try {
       const data = await fetchNotifications();
@@ -38,7 +32,6 @@ function Notification() {
       console.error('Error fetching notifications:', error);
     }
   };
-
   const formatDateTime = (timestamp) => {
     const date = new Date(timestamp);
     const formattedDate = date.toLocaleDateString('en-GB', {
@@ -52,7 +45,6 @@ function Notification() {
     });
     return `${formattedDate} ${formattedTime}`;
   };
-
   const handleDeleteNotification = async (id) => {
     try {
       await deleteNotification(id);
@@ -62,12 +54,31 @@ function Notification() {
       console.error('Error deleting notification:', error);
     }
   };
-
+  const handleDeleteAllNotifications = async () => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "This will delete all notifications and cannot be undone!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085D6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete all!'
+    });
+    if (result.isConfirmed) {
+      try {
+        await Promise.all(notifications.map(notification => deleteNotification(notification.id)));
+        setNotifications([]);
+        setNotificationCount(0);
+        Swal.fire('Deleted!', 'All notifications have been deleted.', 'success');
+      } catch (error) {
+        console.error('Error deleting all notifications:', error);
+      }
+    }
+  };
   const handleNotificationClick = async (id) => {
     await handleDeleteNotification(id);
     navigate('/request');
   };
-
   return (
     <div>
       <Header notificationCount={notificationCount} />
@@ -76,6 +87,13 @@ function Notification() {
           <h3 className="m-b-50 heading-line">
             Notifications <i className="fa fa-bell text-muted"></i>
           </h3>
+          <button
+            className="btn btn-danger mb-4"
+            onClick={handleDeleteAllNotifications}
+            disabled={notifications.length === 0}
+          >
+            Delete All
+          </button>
           <div className="notification-ui_dd-content">
             {notifications.length > 0 ? (
               notifications.map(notification => (
@@ -105,5 +123,4 @@ function Notification() {
     </div>
   );
 }
-
 export default Notification;

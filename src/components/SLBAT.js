@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Button, Col, ProgressBar, Row } from "react-bootstrap";
+import { Button, Col, ProgressBar, Row, Modal } from "react-bootstrap";
 import "../pages/Profile.css";
 import { BASE_URL } from "../services/baseUrl";
-import { Modal } from "react-bootstrap";
 function SLBAT() {
   const [trainings, setTrainings] = useState([]);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -19,7 +18,7 @@ function SLBAT() {
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
-      const filteredTrainings = data.filter(training => training.main_training_name === "SLB Awarness Training(PRM)");
+      const filteredTrainings = data.filter(training => training.main_training_name ==="SLB Awareness Training");
       setTrainings(filteredTrainings);
       const progressResponse = await fetch(`${BASE_URL}/api/employee/${employeeId}/main-training/5/`);
       if (!progressResponse.ok) {
@@ -116,105 +115,149 @@ function SLBAT() {
   const handleSubmitClick = async () => {
     setIsEditMode(false);
     for (const trainingId in formData) {
-      const data = formData[trainingId];
-      try {
-        const response = await fetch(
-          "https://codeedexbackend.pythonanywhere.com/api/employee-sub-trainings/",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to submit data");
+        const data = formData[trainingId];
+        // Convert the date format from yyyy-mm-dd to dd-mm-yyyy
+        const formattedDate = data.start_date.split('-').reverse().join('-');
+        data.start_date = formattedDate;
+        try {
+            const response = await fetch(
+                `${BASE_URL}/api/employee-sub-trainings/`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data),
+                }
+            );
+            if (!response.ok) {
+                throw new Error("Failed to submit data");
+            }
+            await response.json();
+            fetchData();
+        } catch (error) {
+            console.error("Error submitting training data:", error);
         }
-        await response.json();
-        fetchData();
-      } catch (error) {
-        console.error("Error submitting training data:", error);
-      }
     }
-  };
+};
+
   const handleCancelClick = () => {
     setIsEditMode(false);
   };
+
+  
+
   const handleInputChange = (event, trainingId) => {
     const { name, value } = event.target;
     let formattedValue = value;
-    if (name === "start_date") {
-      const dateObj = new Date(value);
-      const day = dateObj.getDate();
-      const month = dateObj.getMonth() + 1;
-      const year = dateObj.getFullYear();
-      formattedValue = `${day < 10 ? "0" + day : day}-${
-        month < 10 ? "0" + month : month
-      }-${year}`;
+    if (name === "start_date" && value) {
+        // If the input is a date and the value exists, format it as YYYY-MM-DD
+        const dateObj = new Date(value);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        formattedValue = `${year}-${month}-${day}`;
     }
     setFormData((prevState) => ({
-      ...prevState,
-      [trainingId]: {
-        ...prevState[trainingId],
-        [name]: formattedValue,
-      },
+        ...prevState,
+        [trainingId]: {
+            ...prevState[trainingId],
+            [name]: formattedValue,
+        },
     }));
-  };
-  const renderTrainingRows = () => {
-    if (!trainings || trainings.length === 0) {
-      return <div>No training data available</div>;
-    }
-    const sortedTrainings = [...trainings].sort((a, b) => {
-      const completionA = trainingProgress[a.name]?.completion_percentage || 0;
-      const completionB = trainingProgress[b.name]?.completion_percentage || 0;
-      return completionB - completionA;
-    });
-    return sortedTrainings.map((training, index) => (
+};
+
+
+
+
+
+
+const renderTrainingRows = () => {
+  if (!trainings || trainings.length === 0) {
+    return <div>No training data available</div>;
+  }
+
+  console.log("Training Progress:", trainingProgress); // Add this line to check training progress
+
+  const sortedTrainings = [...trainings].sort((a, b) => {
+    const completionA = trainingProgress[a.name]?.completion_percentage || 0;
+    const completionB = trainingProgress[b.name]?.completion_percentage || 0;
+    return completionB - completionA;
+  });
+
+  console.log("Sorted Trainings:", sortedTrainings); // Add this line to check sorted trainings
+
+  return sortedTrainings.map((training, index) => {
+    console.log("Training:", training); // Add this line to check each training
+
+    return (
       <Row key={index}>
         <p><b>{training.name}</b></p>
         <Col md={6}>
           <div className="bar-container" style={{ width: '100%' }}>
-            <ProgressBar
-              style={{ height: '16px' }}
-              variant={trainingProgress[training.name]?.completion_percentage >= 95 ? "success" : "danger"}
-              className="w-100"
-              now={trainingProgress[training.name]?.completion_percentage || 0}
-              label={`${trainingProgress[training.name]?.completion_percentage || 0}%`}
-            />
+          <ProgressBar
+  style={{ height: "16px" }}
+  className="w-100"
+  variant={
+    trainingProgress[training.name]?.completion_percentage === 0 ||
+    trainingProgress[training.name]?.expiration_date > 100
+      ? "danger"
+      : "success"
+  }
+  now={
+    trainingProgress[training.name]?.completion_percentage === 0 ||
+    trainingProgress[training.name]?.completion_percentage <= 100
+      ? 100
+      : trainingProgress[training.name]?.completion_percentage
+  }
+  label={
+    trainingProgress[training.name]?.completion_percentage === 0 ||
+    trainingProgress[training.name]?.expiration_date > 100
+      ? "Completed"
+      : trainingProgress[training.name]?.completion_percentage
+      ? '100%'
+      : ""
+  }
+  labelStyle={{ color: "black" }}
+/>
+
+
+    
           </div>
         </Col>
-        {(trainingProgress[training.name]?.completion_percentage > 0 || isEditMode) && (
+        {(trainingProgress[training.name]?.completion_percentage >= 0 || isEditMode) && (
           <>
-            <Col md={2}>
-              <p style={{ marginTop: '-40px' }}><b>{trainingProgress[training.name]?.completion_percentage > 0 ? 'End Date' : 'Start Date'}</b></p>
+            <Col style={{ marginInline: 'auto' }} md={2}>
+              <p style={{ marginTop: '-40px' }}><b>{trainingProgress[training.name]?.completion_percentage >= 0 ? 'End Date' : 'Start Date'}</b></p>
               <input
                 style={{ padding: '5px', width: '113%' }}
-                type={trainingProgress[training.name]?.completion_percentage > 0 ? "text" : "date"}
+                type={trainingProgress[training.name]?.completion_percentage >= 0 ? "text" : "date"}
                 className="form-control"
-                name={trainingProgress[training.name]?.completion_percentage > 0 ? "expiration_date" : "start_date"}
-                value={trainingProgress[training.name]?.completion_percentage > 0 ? trainingProgress[training.name]?.expiration_date : formData[training.id]?.start_date || ''}
-                readOnly={trainingProgress[training.name]?.completion_percentage > 0}
+                name={trainingProgress[training.name]?.completion_percentage >= 0 ? "expiration_date" : "start_date"}
+                value={trainingProgress[training.name]?.completion_percentage >= 0 ? trainingProgress[training.name]?.expiration_date || 'Permanent' : formData[training.id]?.start_date || ''}
+                readOnly={trainingProgress[training.name]?.completion_percentage >= 0}
                 onChange={(e) => handleInputChange(e, training.id)}
               />
             </Col>
             <Col md={2}>
               {isEditMode && (
                 <Button
-                style={{ border: '3px solid', fontWeight: 550, marginLeft: '22px' }}
-                className="w-80"
-                variant={trainingProgress[training.name]?.completion_percentage > 0 ? "outline-danger" : "outline-success"}
-                onClick={() => trainingProgress[training.name]?.completion_percentage > 0 ? handleShowModal(training.id) : handleAddClick(training.id)}
-              >
-                {trainingProgress[training.name]?.completion_percentage > 0 ? 'Remove' : (addedTrainings[training.id] ? 'Added' : 'Add')}
-              </Button>
+                  style={{ border: '3px solid', fontWeight: 550, marginLeft: '22px' }}
+                  className="w-80"
+                  variant={trainingProgress[training.name]?.completion_percentage >= 0 ? "outline-danger" : "outline-success"}
+                  onClick={() => trainingProgress[training.name]?.completion_percentage >= 0 ? handleShowModal(training.id) : handleAddClick(training.id)}
+                >
+                  {trainingProgress[training.name]?.completion_percentage >= 0 ? 'Remove' : (addedTrainings[training.id] ? 'Added' : 'Add')}
+                </Button>
               )}
             </Col>
           </>
         )}
       </Row>
-    ));
-  };
+    );
+  });
+};
+
   return (
     <div>
       <div style={{ height: "auto" }} className="card shadow p-3 mt-2">
@@ -222,7 +265,7 @@ function SLBAT() {
         {isEditMode ? (
           <Row>
             <Col>
-            <Button
+              <Button
                 style={{
                   marginLeft: "auto",
                   marginRight: "1rem",
@@ -239,12 +282,11 @@ function SLBAT() {
             <Col>
               <Button
                 style={{
-                  marginLeft: "73%",
+                  marginLeft: "auto",
                   border: "none",
                   backgroundColor: "rgba(0, 20, 220, 1)",
                   height: "35px",
                   color: "white",
-                  width: "27%",
                 }}
                 onClick={handleSubmitClick}
               >
@@ -261,7 +303,6 @@ function SLBAT() {
                   backgroundColor: "rgba(0, 20, 220, 1)",
                   height: "35px",
                   color: "white",
-                  width: "20%",
                 }}
                 onClick={handleUpdateClick}
               >

@@ -1,16 +1,17 @@
 import { Badge } from '@mui/material';
 import React from 'react';
-import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
-import { FaRegUserCircle, FaBell } from 'react-icons/fa';
+import {  FaBell } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-
 function Header({ notificationCount }) {
-
+    const handleLogout=()=>{
+        localStorage.removeItem("ido")
+        window.location.reload();
+    }
     return (
         <div>
             <Navbar expand="lg" style={{ backgroundColor: "blue" }}>
@@ -47,8 +48,7 @@ function Header({ notificationCount }) {
                             <NavDropdown className='text-white' style={{ marginRight: "70px" }} title="SLB Admin" id="basic-nav-dropdown">
                                 <Link to={'/addcompany'} style={{ textDecoration: "none" }}>
                                     <NavDropdown.Item href="#action/3.1">Edit Comapny</NavDropdown.Item>
-
-                                </Link> 
+                                </Link>
                                 <Link style={{ textDecoration: "none" }} to={'/addproject'}>
                                     <NavDropdown.Item href="#action/3.2">
                                         Edit Project
@@ -59,14 +59,13 @@ function Header({ notificationCount }) {
                                         Edit Trainings
                                     </NavDropdown.Item>
                                 </Link>
-
                                 <NavDropdown.Divider />
                                 <Link to={'/login'}>
                                     <NavDropdown.Item href="#action/3.4">
                                         Login
                                     </NavDropdown.Item>
                                 </Link>
-                                <Link to={''}>
+                                <Link onClick={handleLogout}>
                                     <NavDropdown.Item href="#action/3.4">
                                         Logout
                                     </NavDropdown.Item>
@@ -78,5 +77,4 @@ function Header({ notificationCount }) {
         </div>
     );
 }
-
 export default Header;

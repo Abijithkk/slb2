@@ -3,10 +3,10 @@ import { Container, Row, Col, Form } from "react-bootstrap";
 import Header from "../components/Header";
 import { BASE_URL } from "../services/baseUrl";
 import { FaEdit } from "react-icons/fa";
-// import "./AddEmp.css";
 import Swal from "sweetalert2";
 import { fetchNotifications, updateUserStatus } from "../services/allApi";
 import { useNavigate } from "react-router-dom";
+
 function AddEmp() {
   const [formData, setFormData] = useState({
     full_name: "",
@@ -18,11 +18,14 @@ function AddEmp() {
     mobile_number: "",
     profile_photo: "",
   });
+
   const [crewOptions, setCrewOptions] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [designationOptions, setDesignationOptions] = useState([]);
+  const [projectOptions, setProjectOptions] = useState([]); // State for project options
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchCrewOptions = async () => {
       try {
@@ -36,8 +39,24 @@ function AddEmp() {
         console.error("Error fetching crew options:", error);
       }
     };
+
+    const fetchProjectOptions = async () => { // Fetch project options
+      try {
+        const response = await fetch(`${BASE_URL}/api/viewprojects/`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch project options");
+        }
+        const data = await response.json();
+        setProjectOptions(data);
+      } catch (error) {
+        console.error("Error fetching project options:", error);
+      }
+    };
+
     fetchCrewOptions();
+    fetchProjectOptions(); // Call fetch project options
   }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -45,6 +64,7 @@ function AddEmp() {
       [name]: value,
     });
   };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -61,15 +81,18 @@ function AddEmp() {
       setPreviewImage(null);
     }
   };
+
   const handleSelectChange = async (e) => {
     const { name, value, selectedOptions } = e.target;
     const selectedOption = selectedOptions[0];
     const selectedText = selectedOption.text;
+
     if (name === "company_id") {
       setFormData({
         ...formData,
         company_id: value,
       });
+
       try {
         const response = await fetch(
           `${BASE_URL}/api/viewcompanies/${value}/designations/`
@@ -94,6 +117,7 @@ function AddEmp() {
       });
     }
   };
+
   const handleAction = async (userId, action) => {
     if (action === 'reject') {
       const result = await Swal.fire({
@@ -117,15 +141,19 @@ function AddEmp() {
           prevUsers.filter((user) => user.id !== userId)
         );
         if (action === 'accept') {
+          
         } else if (action === 'reject') {
+          
         }
       }
     } catch (error) {
       console.error(`Error ${action} user:`, error);
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const data = new FormData();
     for (const key in formData) {
       data.append(key, formData[key]);
@@ -133,16 +161,20 @@ function AddEmp() {
     if (formData.profile_photo !== null) {
       data.append("profile_photo", formData.profile_photo);
     }
+
     try {
       const response = await fetch(`${BASE_URL}/api/register-employees/`, {
         method: "POST",
         body: data,
       });
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+
       const result = await response.json();
       console.log("Employee added:", result);
+
       // Display success message using SweetAlert2
       Swal.fire({
         position: "top-center",
@@ -158,26 +190,23 @@ function AddEmp() {
       console.error("Error adding employee:", error);
     }
   };
-
-
-  // Notification count
-  const [notificationCount, setNotificationCount] = useState(0);
-  useEffect(() => {
-    getNotificationCount();
-  }, []);
-  const getNotificationCount = async () => {
-    try {
-      const notifications = await fetchNotifications();
-      setNotificationCount(notifications.length);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
-
+// Notification count
+const [notificationCount, setNotificationCount] = useState(0);
+useEffect(() => {
+  getNotificationCount();
+}, []);
+const getNotificationCount = async () => {
+  try {
+    const notifications = await fetchNotifications();
+    setNotificationCount(notifications.length);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+  }
+};
 
   return (
     <div>
-      <Header notificationCount={notificationCount} />
+       <Header notificationCount={notificationCount} />
       <Container className="mt-5">
         <Row>
           <Col xs={12} md={3}>
@@ -215,10 +244,11 @@ function AddEmp() {
                   onChange={handleChange}
                 />
               </Form.Group>
+
               <Row>
                 <Col xs={12} sm={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Gate Pass Number</Form.Label>
+                    <Form.Label> Gate Pass Number</Form.Label>
                     <Form.Control
                       type="text"
                       name="gate_pass_no"
@@ -279,9 +309,11 @@ function AddEmp() {
                       onChange={handleChange}
                     >
                       <option value="">Select</option>
-                      <option value="1">BPRL</option>
-                      <option value="2">RDG</option>
-                      <option value="3">IPE PKG 2</option>
+                      {projectOptions.map((project) => ( // Map over project options
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
                     </Form.Select>
                   </Form.Group>
                 </Col>
@@ -297,8 +329,9 @@ function AddEmp() {
                   />
                 </Form.Group>
               </Col>
+
               <Col xs={12}>
-                <button type="submit" className="btn btn-primary w-25 mb-5">
+                <button type="submit" className="btn btn-primary w-25">
                   Submit
                 </button>
               </Col>
@@ -309,5 +342,5 @@ function AddEmp() {
     </div>
   );
 }
-export default AddEmp;
 
+export default AddEmp;
