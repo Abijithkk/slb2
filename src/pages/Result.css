@@ -52,7 +52,7 @@
 
 
    .otc{
-    margin-right: 300px;
+    margin-right: 573px;
    }
 
    .pdfbtn{
@@ -64,4 +64,46 @@
     .otc{
       margin-right: 325px;
      }
+}
+/* Add responsive styles for smaller screens */
+@media screen and (max-width: 768px) {
+  .search {
+    flex-direction: column;
+  }
+  .search__input {
+    margin-bottom: 10px;
+  }
+  .otc{
+    font-size: medium;
+  }
+  .search__icon{
+    display: none;
+  }
+  .pdfbtn{
+    margin: auto;
+  }
+}
+
+/* Add styles for scrollable table */
+#pdf-content {
+  overflow-x: auto;
+}
+
+/* Hide horizontal scrollbar */
+#pdf-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Add styles for the green and red circles */
+.green-circle, .red-circle {
+  font-size: 8px;
+  margin-left: 5px;
+}
+
+.red-circle {
+  color: red;
+}
+
+.green-circle {
+  color: green;
 }

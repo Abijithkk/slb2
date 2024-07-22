@@ -33,6 +33,7 @@ function Profile() {
   const [profileData, setProfileData] = useState({});
   const [companyOptions, setCompanyOptions] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
+  const [designationOptions, setDesignationOptions] = useState([]);
   const [formValues, setFormValues] = useState({
     fullname: "",
     designation: "",
@@ -64,6 +65,7 @@ function Profile() {
             return;
           }
           setProfileData(profileResult);
+          console.log("kajaa",profileResult);
           setFormValues({
             fullname: profileResult.fullname,
             designation: profileResult.designation,
@@ -100,7 +102,20 @@ function Profile() {
       fetchData();
     }
   }, [userId, navigate, formValues.profile_photo]);
-
+  useEffect(() => {
+    // Fetch designation options or set them directly if static
+    const fetchDesignationOptions = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/designations/`); // Adjust URL as per your API endpoint
+        const data = await response.json();
+        setDesignationOptions(data); // Assuming data is an array of designation objects
+      } catch (error) {
+        console.error("Error fetching designation options:", error);
+      }
+    };
+  
+    fetchDesignationOptions();
+  }, []);
   const handleDutyToggle = async () => {
     try {
       const response = await toggleDutyStatus(userId, !onDuty);
@@ -110,7 +125,34 @@ function Profile() {
       console.error("Error toggling duty status:", error);
     }
   };
-
+  const fetchData = async () => {
+    try {
+      const profileResult = await getProfile(userId);
+      if (!profileResult || !profileResult.fullname) {
+        setFetchError(true);
+        setLoading(false);
+        return;
+      }
+      setProfileData(profileResult);
+      setFormValues({
+        fullname: profileResult.fullname,
+        designation: profileResult.designation || { id: "", name: "" },
+        gatePassNo: profileResult.gate_pass_no,
+        project: profileResult.project || { id: "", name: "" },
+        rig: profileResult.rig_or_rigless,
+        company: profileResult.company || { id: "", name: "" },
+        profile_photo: profileResult.profile_photo || formValues.profile_photo,
+      });
+      setOnDuty(profileResult.on_duty);
+      // Remaining fetch operations...
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setFetchError(true);
+      setLoading(false);
+    }
+  };
+  
   // Notification count
   const [notificationCount, setNotificationCount] = useState(0);
   useEffect(() => {
@@ -130,7 +172,7 @@ function Profile() {
       try {
         const updatedData = {
           fullname: formValues.fullname || profileData.fullname,
-          designation: formValues.designation || profileData.designation,
+          designation_id: formValues.designation.id || profileData.designation.id,
           gate_pass_no: formValues.gatePassNo || profileData.gate_pass_no,
           project_id: formValues.project.id || profileData.project.id,
           rig_or_rigless: formValues.rig || profileData.rig_or_rigless,
@@ -138,23 +180,17 @@ function Profile() {
           mobile_number: profileData.mobile_number,
         };
         const result = await updateProfile(profileData.id, updatedData);
-        console.log(result);
-        if (profileImageFile) {
-          const formData = new FormData();
-          formData.append("profileImage", profileImageFile);
-          const imageResult = await updateProfileImage(
-            profileData.id,
-            formData
-          );
-          console.log(imageResult);
-        }
+        console.log(result); // Check if designation data is correctly updated
+  
+        // Optionally, fetch profile data again to update state
+        fetchData(); // Ensure this function re-fetches profile data
         Swal.fire({
           icon: "success",
           title: "Profile Updated Successfully",
           showConfirmButton: false,
           timer: 1500,
         });
-        window.location.reload();
+        setIsEditMode(false); // Exit edit mode
       } catch (error) {
         console.error("Error updating profile:", error);
         Swal.fire({
@@ -163,10 +199,12 @@ function Profile() {
           text: "Failed to update profile",
         });
       }
+    } else {
+      setIsEditMode(true); // Enter edit mode
     }
-    setIsEditMode(!isEditMode);
   };
-
+  
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "project") {
@@ -179,10 +217,16 @@ function Profile() {
         (company) => company.id === parseInt(value)
       );
       setFormValues({ ...formValues, company: selectedCompany });
+    } else if (name === "designation") {
+      const selectedDesignation = designationOptions.find(
+        (designation) => designation.id === parseInt(value)
+      );
+      setFormValues({ ...formValues, designation: selectedDesignation });
     } else {
       setFormValues({ ...formValues, [name]: value });
     }
   };
+  
 
   const handleHeadingClick = async (heading) => {
     try {
@@ -263,7 +307,7 @@ function Profile() {
       <div className="profile-wrapper mt-3">
         <Container fluid>
           <Row className="profile-container">
-            <Col sm={3} className="menu" style={{ marginLeft: "3%" }}>
+            <Col sm={12} md={3} className="menu" style={{ marginLeft: "3%" }}>
               <div className="profile-info">
                 <div className="profile-image">
                   <label className="switch">
@@ -277,12 +321,13 @@ function Profile() {
 
                   <div>
                     <img
-                      src={formValues.profile_photo}
+                      src={formValues.profile_photo || "https://i.postimg.cc/fb2QkK8K/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg"}
                       alt="Profile"
                       onClick={() => {
                         document.getElementById("profileImageInput").click();
                       }}
                     />
+
                     <input
                       type="file"
                       id="profileImageInput"
@@ -293,42 +338,47 @@ function Profile() {
                   </div>
                 </div>
                 <div className="profile-details">
-                  {isEditMode ? (
-                    <>
-                      <input
-                        style={{
-                          border: "none",
-                          textAlign: "center",
-                          width: "100%",
-                        }}
-                        type="text"
-                        name="fullname"
-                        id="name"
-                        value={formValues.fullname}
-                        onChange={handleInputChange}
-                      />
-                      <input
-                        style={{
-                          border: "none",
-                          textAlign: "center",
-                          width: "100%",
-                        }}
-                        type="text"
-                        name="designation"
-                        id="job"
-                        value={formValues.designation}
-                        onChange={handleInputChange}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <p id="name">{profileData.fullname}</p>
-                      <p id="job">{profileData.designation}</p>
-                    </>
-                  )}
-                </div>
+  {isEditMode ? (
+    <>
+      <input
+        style={{
+          border: "none",
+          textAlign: "center",
+          width: "100%",
+        }}
+        type="text"
+        name="fullname"
+        id="name"
+        value={formValues.fullname}
+        onChange={handleInputChange}
+      />
+      <select
+        style={{
+          border: "none",
+          textAlign: "center",
+          width: "100%",
+        }}
+        name="designation"
+        value={formValues.designation.id} // Assuming you need the ID for the select
+        onChange={handleInputChange}
+      >
+        {designationOptions.map((designation) => (
+          <option key={designation.id} value={designation.id}>
+            {designation.name}
+          </option>
+        ))}
+      </select>
+    </>
+  ) : (
+    <>
+      <p id="name">{profileData.fullname}</p>
+      <p id="job">{profileData.designation.name}</p>
+    </>
+  )}
+</div>
+
               </div>
-              <div className="progress-container">
+              <div className="progress-containerr">
                 <p id="otc">Overall training Coefficient(OTC)</p>
                 <ProgressBar
                   style={{ height: "13px" }}
@@ -431,29 +481,27 @@ function Profile() {
                 </Button>
               </form>
             </Col>
-            <Col sm={8} className="content" style={{ marginLeft: "2%" }}>
-            <div className="heading-section">
-  <div className="heading-list" style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
-    {trainingOptions.map((training) => (
-      <div
-        key={training.id}
-        className={
-          selectedHeading === training.name
-            ? "heading selected"
-            : "heading"
-        }
-        onClick={() => handleHeadingClick(training.name)}
-      >
-        {training.name}
-        {training.name === "SLB Awareness Training" && (
-          <span className="upload-icon ms-2"> 
-            <i className="fa fa-upload"></i>
-          </span>
-        )}
-      </div>
-    ))}
-  </div>
-  </div>
+            <Col sm={12} md={8} className="content" style={{ marginLeft: "2%" }}>
+              <div className="heading-section">
+                <div
+                  className="heading-list"
+                  style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+                >
+                  {trainingOptions.map((training) => (
+                    <div
+                      key={training.id}
+                      className={
+                        selectedHeading === training.name
+                          ? "heading selected"
+                          : "heading"
+                      }
+                      onClick={() => handleHeadingClick(training.name)}
+                    >
+                      {training.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               <div className="content-section">
                 {showContent && (

@@ -26,6 +26,7 @@ function Result() {
       try {
         const response = await approvedusers();
         setUsers(response.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -126,10 +127,11 @@ function Result() {
   const filteredUsers = (usersList, query, filter) => {
     return usersList.filter((user) => {
       const fullName = user.fullname || "";
-      const designation = user.designation || "";
+      const designation = (user.designation && user.designation.name) ? user.designation.name : ""; // Check if designation exists and is an object, then access its name property
       const projectName = user.project.name || "";
       const gatePassNo = user.gate_pass_no || "";
       const companyName = user.company.name || "";
+      
       const matchesSearchQuery = (
         fullName.toLowerCase().includes(query.toLowerCase()) ||
         designation.toLowerCase().includes(query.toLowerCase()) ||
@@ -137,7 +139,7 @@ function Result() {
         gatePassNo.toLowerCase().includes(query.toLowerCase()) ||
         companyName.toLowerCase().includes(query.toLowerCase())
       );
-
+  
       if (filter === "all") {
         return matchesSearchQuery;
       } else if (filter === "OnDuty") {
@@ -148,6 +150,7 @@ function Result() {
       return matchesSearchQuery;
     });
   };
+  
 
   const handleDownload = () => {
     const doc = new jsPDF({
@@ -192,7 +195,7 @@ function Result() {
       ],
       body: filteredUsers(users, searchQuery, filter).map((user) => [
         user.fullname,
-        user.designation,
+        user.designation.name,
         user.project.name,
         user.gate_pass_no,
         user.company.name,
@@ -220,15 +223,28 @@ function Result() {
     const subTrainingNamesForUser = subTrainingsForUser.map(training => {
       const subTrainingName = subTrainingNames[training.sub_training];
       const endDate = training.expiration_date ? training.expiration_date : "Permanent";
-  
+      let status = "";
+      
       if (!subTrainingName) {
-        return `${training.main_training_name} <br/> {${training.sub_training_name} <br/> End Date: ${endDate}<br/> Status: ${training.completion_percentage}% } `;
+        status = `${training.main_training_name}  {${training.sub_training_name}: <br/> End Date: ${endDate}<br/> Status: `;
+      } else {
+        status = `${subTrainingName}:<br/> Status: `;
       }
-      return `${subTrainingName}:<br/> Completion Percentage: ${training.completion_percentage}%`;
+      
+      if (training.completion_percentage === 0) {
+        status += "Expired";
+      } else if (training.completion_percentage === 100) {
+        status += "Valid";
+      } else {
+        status += `${training.completion_percentage}%`;
+      }
+  
+      return status;
     });
   
     return subTrainingNamesForUser.join(',<br/><br/>');
   };
+  
 
   const handleUpdateProfile = (id) => {
     sessionStorage.setItem('userid', id);
@@ -283,12 +299,12 @@ function Result() {
           </RadioGroup>
         </FormControl>
       </div>
-      <h5 className="text-end otc"> <b>Overall Training Coefficient (OTC) : {overallOTC}%</b></h5>
+      <h5 style={{whiteSpace:'nowrap'}} className="text-end otc"> <b>Overall Training Coefficient (OTC) : {overallOTC}%</b></h5>
       <Button className="pdfbtn" variant="secondary" onClick={handleDownload}>
         Download <i className="fa-solid fa-file-pdf"></i>
       </Button>
       <center>
-        <div id="pdf-content">
+        <div id="pdf-content" className="scrollable-table">
           <Table style={{ backgroundColor: "white", width: "90%", borderTop: "1px solid #D4D4D4" }}>
             <thead>
               <tr>
@@ -299,7 +315,7 @@ function Result() {
                 <th style={{ fontWeight: "500" }}>Company Name</th>
                 <th style={{ fontWeight: "500" }}>OTC</th>
                 <th style={{ fontWeight: "500",width:'105px' }}>On Duty / Off Duty</th>
-                <th style={{ fontWeight: "500" }}>Sub-Trainings</th>
+                <th style={{ fontWeight: "500",display:'none' }}>Sub-Trainings</th>
                 <th style={{ fontWeight: "500" }}>Action</th>
               </tr>
             </thead>
@@ -315,7 +331,7 @@ function Result() {
                       {user.fullname}
                     </div>
                   </td>
-                  <td className="pt-3">{user.designation}</td>
+                  <td className="pt-3">{user.designation.name}</td>
                   <td className="pt-3">{user.project.name}</td>
                   <td className="pt-3">{user.gate_pass_no}</td>
                   <td className="pt-3">{user.company.name}</td>
@@ -324,7 +340,7 @@ function Result() {
                     {user.on_duty ? "On Duty" : "Off Duty"}
                     <i className={`fa-solid fa-circle ms-1 ${user.on_duty ? 'green-circle' : 'red-circle'}`}></i>
                   </td>
-                  <td className="pt-3"  dangerouslySetInnerHTML={{ __html: getSubTrainings(user.id) }}></td>
+                  <td style={{display:'none'}} className="pt-3"  dangerouslySetInnerHTML={{ __html: getSubTrainings(user.id) }}></td>
                   <td className="pt-3">
                     <Button
                       variant="primary"

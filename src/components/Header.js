@@ -5,16 +5,18 @@ import Form from 'react-bootstrap/Form';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
-import {  FaBell } from 'react-icons/fa';
+import { FaBell } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+
 function Header({ notificationCount }) {
-    const handleLogout=()=>{
+    const handleLogout = () => {
         localStorage.removeItem("ido")
         window.location.reload();
     }
+
     return (
         <div>
-            <Navbar expand="lg" style={{ backgroundColor: "blue" }}>
+            <Navbar expand="lg" style={{ backgroundColor: "#0014dc",fontFamily:'Inter' }}>
                 <Container fluid>
                     <Navbar.Toggle aria-controls="navbarScroll" />
                     <Navbar.Collapse id="navbarScroll">
@@ -32,11 +34,17 @@ function Header({ notificationCount }) {
                             <Link className='ms-3' to={'/result'} style={{ textDecoration: "none", color: "white", padding: "15px", fontSize: "16px" }}>
                                 Employee Profile
                             </Link>
+                            <Link className='ms-3' to={'/user'} style={{ textDecoration: "none", color: "white", padding: "15px", fontSize: "16px" }}>
+                                Employee Search
+                            </Link>
                             <Link className='ms-3' to={'/add'} style={{ textDecoration: "none", color: "white", padding: "15px", fontSize: "16px" }}>
                                 Add Employee
                             </Link>
                             <Link className='ms-3' to={'/remove'} style={{ textDecoration: "none", color: "white", padding: "15px", fontSize: "16px" }}>
                                 Remove Employee
+                            </Link>
+                            <Link className='ms-3' to={'/Faq'} style={{ textDecoration: "none", color: "white", padding: "15px", fontSize: "16px" }}>
+                                FAQ
                             </Link>
                         </Nav>
                         <Form className="d-flex align-items-center">
@@ -47,11 +55,16 @@ function Header({ notificationCount }) {
                             </Link>
                             <NavDropdown className='text-white' style={{ marginRight: "70px" }} title="SLB Admin" id="basic-nav-dropdown">
                                 <Link to={'/addcompany'} style={{ textDecoration: "none" }}>
-                                    <NavDropdown.Item href="#action/3.1">Edit Comapny</NavDropdown.Item>
+                                    <NavDropdown.Item href="#action/3.1">Edit Company</NavDropdown.Item>
                                 </Link>
                                 <Link style={{ textDecoration: "none" }} to={'/addproject'}>
                                     <NavDropdown.Item href="#action/3.2">
                                         Edit Project
+                                    </NavDropdown.Item>
+                                </Link>
+                                <Link style={{ textDecoration: "none" }} to={'/adddesignation'}>
+                                    <NavDropdown.Item href="#action/3.2">
+                                        Edit Designation
                                     </NavDropdown.Item>
                                 </Link>
                                 <Link style={{ textDecoration: "none" }} to={'/addtrainings'}>
@@ -60,21 +73,23 @@ function Header({ notificationCount }) {
                                     </NavDropdown.Item>
                                 </Link>
                                 <NavDropdown.Divider />
-                                <Link to={'/login'}>
+                                <Link style={{ textDecoration: "none" }} to={'/login'}>
                                     <NavDropdown.Item href="#action/3.4">
                                         Login
                                     </NavDropdown.Item>
                                 </Link>
-                                <Link onClick={handleLogout}>
+                                <Link style={{ textDecoration: "none" }} onClick={handleLogout}>
                                     <NavDropdown.Item href="#action/3.4">
                                         Logout
                                     </NavDropdown.Item>
                                 </Link>
-                            </NavDropdown>                        </Form>
+                            </NavDropdown>
+                        </Form>
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
         </div>
     );
 }
+
 export default Header;

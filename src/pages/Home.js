@@ -22,7 +22,7 @@ function Home() {
     const data = {
       fullname: employeeName,
       gate_pass_no: gatePassId,
-      designation: designation,
+      designation_name: designation,
       company_name: company,
     };
 

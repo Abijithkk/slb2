@@ -135,7 +135,7 @@ function EmpReq() {
                                 <div className="row" style={rowStyle}>
                                     <div className="col-md-2">Designation</div>
                                     <div className="col-md-1">:</div>
-                                    <div className="col-md-3">{user.designation}</div>
+                                    <div className="col-md-3">{user.designation.name}</div>
                                     <div className="col-md-2">Project</div>
                                     <div className="col-md-1">:</div>
                                     <div className="col-md-2">{user.project.name}</div>

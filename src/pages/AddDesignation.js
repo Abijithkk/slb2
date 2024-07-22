@@ -3,14 +3,16 @@ import axios from 'axios';
 import Header from '../components/Header';
 import { fetchNotifications } from '../services/allApi';
 import { BASE_URL } from '../services/baseUrl';
+import { Modal, Button } from 'react-bootstrap'; // Import React Bootstrap components
+import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 
-function AddProject() {
+function AddDesignation() {
   const [projects, setProjects] = useState([]);
   const [projectName, setProjectName] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingId, setEditingId] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [projectIdToDelete, setProjectIdToDelete] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -18,7 +20,7 @@ function AddProject() {
 
   const fetchProjects = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/viewprojects/`);
+      const response = await axios.get(`${BASE_URL}/api/alldesignations/`);
       setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -28,7 +30,7 @@ function AddProject() {
   const handleAddProject = async () => {
     if (projectName) {
       try {
-        const response = await axios.post(`${BASE_URL}/api/create-project/`, {
+        const response = await axios.post(`${BASE_URL}/api/designations/`, {
           name: projectName,
         });
         setProjects([...projects, response.data]);
@@ -47,7 +49,7 @@ function AddProject() {
 
   const handleSaveEdit = async () => {
     try {
-      await axios.put(`${BASE_URL}/api/updateprojects/${editingId}/`, {
+      await axios.put(`${BASE_URL}/api/designations/${editingId}/`, {
         name: projectName,
       });
       const updatedProjects = projects.map((project, index) =>
@@ -62,23 +64,27 @@ function AddProject() {
     }
   };
 
-  const handleDeleteProject = async () => {
-    if (projectIdToDelete) {
-      try {
-        await axios.delete(`${BASE_URL}/api/delprojects/${projectIdToDelete}/`);
-        setProjects(projects.filter(project => project.id !== projectIdToDelete));
-        setShowConfirmModal(false);
-        setProjectIdToDelete(null);
-      } catch (error) {
-        console.error('Error deleting project:', error);
-      }
+  const handleDeleteProject = id => {
+    setProjectToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`${BASE_URL}/api/designations/${projectToDelete}/`);
+      setProjects(projects.filter(project => project.id !== projectToDelete));
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error('Error deleting project:', error);
     }
   };
 
+  // Notification count
   const [notificationCount, setNotificationCount] = useState(0);
   useEffect(() => {
     getNotificationCount();
   }, []);
+
   const getNotificationCount = async () => {
     try {
       const notifications = await fetchNotifications();
@@ -92,13 +98,13 @@ function AddProject() {
     <div>
       <Header notificationCount={notificationCount} />
       <div style={styles.app}>
-        <h1 style={styles.header}>Edit Project</h1>
+        <h1 style={styles.header}>Edit Designation</h1>
         <div style={styles.projectForm}>
           <input
             type="text"
             value={projectName}
             onChange={e => setProjectName(e.target.value)}
-            placeholder="Enter project name"
+            placeholder="Enter Designation name"
             style={styles.input}
           />
           {editingIndex !== null ? (
@@ -107,7 +113,7 @@ function AddProject() {
             </button>
           ) : (
             <button onClick={handleAddProject} style={styles.button}>
-              Add Project
+              Add Designation
             </button>
           )}
         </div>
@@ -122,10 +128,7 @@ function AddProject() {
                 Edit
               </button>
               <button className='ms-2'
-                onClick={() => {
-                  setShowConfirmModal(true);
-                  setProjectIdToDelete(project.id);
-                }}
+                onClick={() => handleDeleteProject(project.id)}
                 style={{ ...styles.button, ...styles.deleteButton }}
               >
                 Delete
@@ -133,20 +136,25 @@ function AddProject() {
             </div>
           ))}
         </div>
-      </div>
 
-      {showConfirmModal && (
-        <div style={styles.modalBackdrop}>
-          <div style={styles.modalContent}>
-            <h3>Confirm Deletion</h3>
-            <p>Are you sure you want to delete this project?</p>
-            <div style={styles.modalButtons}>
-              <button onClick={handleDeleteProject} style={styles.modalButton}>Confirm</button>
-              <button onClick={() => setShowConfirmModal(false)} style={styles.modalButton}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* Delete Confirmation Modal */}
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Delete</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Are you sure you want to delete this designation?
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
     </div>
   );
 }
@@ -209,45 +217,6 @@ const styles = {
   deleteButton: {
     backgroundColor: '#DC3545',
   },
-  'button:hover': {
-    backgroundColor: '#0056B3',
-  },
-  'editButton:hover': {
-    backgroundColor: '#E0A800',
-  },
-  'deleteButton:hover': {
-    backgroundColor: '#C82333',
-  },
-  modalBackdrop: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '8px',
-    width: '300px',
-    textAlign: 'center',
-  },
-  modalButtons: {
-    marginTop: '20px',
-  },
-  modalButton: {
-    margin: '0 10px',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s ease',
-  },
 };
 
-export default AddProject;
+export default AddDesignation;

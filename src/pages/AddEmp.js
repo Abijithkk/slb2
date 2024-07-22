@@ -12,7 +12,7 @@ function AddEmp() {
     full_name: "",
     gate_pass_no: "",
     rig_or_rigless: "",
-    designation: "",
+    designation_id: "",
     project_id: "",
     company_id: "",
     mobile_number: "",
@@ -22,7 +22,7 @@ function AddEmp() {
   const [crewOptions, setCrewOptions] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [designationOptions, setDesignationOptions] = useState([]);
-  const [projectOptions, setProjectOptions] = useState([]); // State for project options
+  const [projectOptions, setProjectOptions] = useState([]);
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
@@ -40,7 +40,7 @@ function AddEmp() {
       }
     };
 
-    const fetchProjectOptions = async () => { // Fetch project options
+    const fetchProjectOptions = async () => {
       try {
         const response = await fetch(`${BASE_URL}/api/viewprojects/`);
         if (!response.ok) {
@@ -53,8 +53,22 @@ function AddEmp() {
       }
     };
 
+    const fetchDesignationOptions = async () => {
+      try {
+        const response = await fetch("https://codeedexpython.pythonanywhere.com/api/alldesignations/");
+        if (!response.ok) {
+          throw new Error("Failed to fetch designation options");
+        }
+        const data = await response.json();
+        setDesignationOptions(data);
+      } catch (error) {
+        console.error("Error fetching designation options:", error);
+      }
+    };
+
     fetchCrewOptions();
-    fetchProjectOptions(); // Call fetch project options
+    fetchProjectOptions();
+    fetchDesignationOptions();
   }, []);
 
   const handleChange = (e) => {
@@ -82,33 +96,19 @@ function AddEmp() {
     }
   };
 
-  const handleSelectChange = async (e) => {
+  const handleSelectChange = (e) => {
     const { name, value, selectedOptions } = e.target;
     const selectedOption = selectedOptions[0];
-    const selectedText = selectedOption.text;
 
     if (name === "company_id") {
       setFormData({
         ...formData,
         company_id: value,
       });
-
-      try {
-        const response = await fetch(
-          `${BASE_URL}/api/viewcompanies/${value}/designations/`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch designations");
-        }
-        const data = await response.json();
-        setDesignationOptions(data);
-      } catch (error) {
-        console.error("Error fetching designations:", error);
-      }
-    } else if (name === "designation") {
+    } else if (name === "designation_id") {
       setFormData({
         ...formData,
-        designation: selectedText,
+        designation_id: value,
       });
     } else {
       setFormData({
@@ -175,7 +175,6 @@ function AddEmp() {
       const result = await response.json();
       console.log("Employee added:", result);
 
-      // Display success message using SweetAlert2
       Swal.fire({
         position: "top-center",
         icon: "success",
@@ -184,29 +183,28 @@ function AddEmp() {
         timer: 1500,
       });
       navigate('/result')
-      // Call handleAction to accept the new user
       handleAction(result.id, "accept");
     } catch (error) {
       console.error("Error adding employee:", error);
     }
   };
-// Notification count
-const [notificationCount, setNotificationCount] = useState(0);
-useEffect(() => {
-  getNotificationCount();
-}, []);
-const getNotificationCount = async () => {
-  try {
-    const notifications = await fetchNotifications();
-    setNotificationCount(notifications.length);
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-  }
-};
+
+  const [notificationCount, setNotificationCount] = useState(0);
+  useEffect(() => {
+    getNotificationCount();
+  }, []);
+  const getNotificationCount = async () => {
+    try {
+      const notifications = await fetchNotifications();
+      setNotificationCount(notifications.length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
 
   return (
     <div>
-       <Header notificationCount={notificationCount} />
+      <Header notificationCount={notificationCount} />
       <Container className="mt-5">
         <Row>
           <Col xs={12} md={3}>
@@ -248,7 +246,7 @@ const getNotificationCount = async () => {
               <Row>
                 <Col xs={12} sm={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label> Gate Pass Number</Form.Label>
+                    <Form.Label>Gate Pass Number</Form.Label>
                     <Form.Control
                       type="text"
                       name="gate_pass_no"
@@ -282,7 +280,7 @@ const getNotificationCount = async () => {
                       {crewOptions.map((crew) => (
                         <option key={crew.id} value={crew.id}>
                           {crew.name}
-                        </option>
+                          </option>
                       ))}
                     </Form.Select>
                   </Form.Group>
@@ -290,12 +288,18 @@ const getNotificationCount = async () => {
                 <Col xs={12} sm={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Designation</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="designation"
-                      value={formData.designation}
-                      onChange={handleChange}
-                    />
+                    <Form.Select
+                      name="designation_id"
+                      value={formData.designation_id}
+                      onChange={handleSelectChange}
+                    >
+                      <option value="">Select Designation</option>
+                      {designationOptions.map((designation) => (
+                        <option key={designation.id} value={designation.id}>
+                          {designation.name}
+                        </option>
+                      ))}
+                    </Form.Select>
                   </Form.Group>
                 </Col>
               </Row>
@@ -309,7 +313,7 @@ const getNotificationCount = async () => {
                       onChange={handleChange}
                     >
                       <option value="">Select</option>
-                      {projectOptions.map((project) => ( // Map over project options
+                      {projectOptions.map((project) => (
                         <option key={project.id} value={project.id}>
                           {project.name}
                         </option>
@@ -317,19 +321,18 @@ const getNotificationCount = async () => {
                     </Form.Select>
                   </Form.Group>
                 </Col>
+                <Col xs={12} sm={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Mobile Number</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="mobile_number"
+                      value={formData.mobile_number}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
               </Row>
-              <Col xs={12} sm={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Mobile Number</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="mobile_number"
-                    value={formData.mobile_number}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </Col>
-
               <Col xs={12}>
                 <button type="submit" className="btn btn-primary w-25">
                   Submit
@@ -344,3 +347,4 @@ const getNotificationCount = async () => {
 }
 
 export default AddEmp;
+

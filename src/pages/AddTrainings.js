@@ -49,7 +49,7 @@ function AddTrainings() {
           setMainTrainings([...mainTrainings, { ...response.data, sub_trainings: [] }]);
           showToast('Training added successfully!', 'success');
         } else {
-          const response = await axios.post(`'${BASE_URL}/api/sub-trainings/`, {
+          const response = await axios.post(`${BASE_URL}/api/sub-trainings/`, {
             name: trainingName,
             main_training: selectedMainTraining,
             validity_period: validityPeriod,

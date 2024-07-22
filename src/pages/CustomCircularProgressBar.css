@@ -1,0 +1,38 @@
+.custom-progress-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .progress-ring-background {
+    fill: transparent;
+    stroke: #e6e6e6;
+  }
+  
+  .progress-ring {
+    fill: transparent;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s;
+  }
+  
+  .inner-progress-ring {
+    fill: transparent;
+    stroke: #d6d6d6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s;
+  }
+  
+  .progress-text {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #333;
+  }
+  
+  .progress-value {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
