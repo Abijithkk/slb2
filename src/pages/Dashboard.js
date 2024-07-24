@@ -16,6 +16,7 @@ import "./Dashboard.css";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { fetchNotifications } from "../services/allApi";
+import ProgressBar from 'react-bootstrap/ProgressBar';
 
 const Dashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
@@ -60,6 +61,7 @@ const Dashboard = () => {
       setExpandedCard(id);
     }
   };
+  
   useEffect(() => {
     const fetchRecentActivities = async () => {
       try {
@@ -175,11 +177,11 @@ const Dashboard = () => {
           title,
           value: 0, // Set percentage to 0
         }));
-        
+  
         setProgressData(existingProgressData); // Update the state with existing progress data with 0% completion
   
         // Optionally, if you want to fetch sub-trainings, you can still call fetchSubTrainings
-        existingProgressData.forEach((data) => fetchSubTrainings(data.id));
+        existingProgressData.forEach((data) => fetchSubTrainings(data.title));
   
         console.log("Fetched progress data with no employees:", existingProgressData);
         return; // Exit early
@@ -199,7 +201,7 @@ const Dashboard = () => {
       setProgressData(fetchedProgressData);
   
       // Fetch sub-trainings for each training initially
-      fetchedProgressData.forEach((data) => fetchSubTrainings(data.id));
+      fetchedProgressData.forEach((data) => fetchSubTrainings(data.title));
   
       console.log("Fetched progress data:", fetchedProgressData);
     } catch (error) {
@@ -207,6 +209,7 @@ const Dashboard = () => {
       setProgressData([]); // Clear the progress data on error
     }
   };
+  
   
   useEffect(() => {
     fetchTraining();
@@ -298,22 +301,45 @@ const Dashboard = () => {
     selectedDuty,
   ]);
 
-  const fetchSubTrainings = async (trainingId) => {
+  const fetchSubTrainings = async () => {
     try {
+      const params = {};
+      if (selectedProjectId) params.project_id = selectedProjectId;
+      if (selectedCompanyId) params.company_id = selectedCompanyId;
+      if (selectedTrainingId) params.main_training_id = selectedTrainingId;
+      if (selectedDesignationId) params.designation_id = selectedDesignationId;
+      if (selectedDuty && selectedDuty !== "Select Duty")
+        params.on_duty = selectedDuty === "On Duty";
+  
       const response = await axios.get(
-        `https://codeedexpython.pythonanywhere.com/api/main-training/${trainingId}/sub-trainings/`
+        "https://codeedexpython.pythonanywhere.com/api/dashboard-filter/",
+        { params }
       );
-      setSubTrainings((prevState) => ({
-        ...prevState,
-        [trainingId]: response.data,
-      }));
+  
+      if (response.data.detail === "No sub-trainings found matching the criteria.") {
+        setSubTrainings({});
+      } else {
+        const subTrainingData = response.data.sub_training_data || {};
+        setSubTrainings(subTrainingData);
+        console.log(subTrainingData);
+      }
     } catch (error) {
-      console.error(
-        `Error fetching sub-trainings for training ${trainingId}:`,
-        error
-      );
+      console.error("Error fetching sub-trainings:", error);
+      setSubTrainings({});
     }
   };
+  
+  useEffect(() => {
+    fetchSubTrainings();
+  }, [
+    selectedProjectId,
+    selectedCompanyId,
+    selectedDesignationId,
+    selectedTrainingId,
+    selectedDuty,
+  ]);
+  
+  
 
   const [notificationCount, setNotificationCount] = useState(0);
   useEffect(() => {
@@ -338,9 +364,9 @@ const Dashboard = () => {
             <Card className="dashboard-card">
               <Card.Body>
                 <h5 className="text-center">
-                  <b>OTC</b>
+                  <b>Overall Training Coefficient</b>
                 </h5>
-                <div style={{ width: 200, height: 200, margin: "0 auto" }}>
+                <div style={{ width: 200, height: 200, margin: "13px auto" }}>
                   <CustomProgressBar value={otcPercentage || 0} />
                 </div>
               </Card.Body>
@@ -365,12 +391,13 @@ const Dashboard = () => {
                   <Card.Body>
                     <h6
                       style={{
-                        margin: "10px 0",
+                        margin: "19px -22px",
                         fontWeight: "bold",
-                        fontSize: "1rem",
+                        fontSize: "20px",
+                        whiteSpace:"nowrap"
                       }}
                     >
-                      No of employees = 100%
+                      100% Achieved Employees
                     </h6>
                     <h3
                       className="mt-4"
@@ -389,7 +416,7 @@ const Dashboard = () => {
               <Col lg={3}>
                 <Card
                   style={{
-                    padding: "30px",
+                    padding: "12px",
                     height: "175px",
                     border: "none",
                     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
@@ -402,12 +429,12 @@ const Dashboard = () => {
                   <Card.Body>
                     <h6
                       style={{
-                        margin: "10px 0",
+                        margin: "19px -22px",
                         fontWeight: "bold",
-                        fontSize: "1rem",
+                        fontSize: "20px",
                       }}
                     >
-                      No of employees &lt; 95%
+                     <span>{"<95%"}</span> Achieved Employees
                     </h6>
                     <h3
                       className="mt-4"
@@ -432,7 +459,7 @@ const Dashboard = () => {
                     border: "none",
                     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
                     borderRadius: "8px",
-                    backgroundColor: "#ff5e5e", 
+                    backgroundColor: "#ebba00", 
                     color: "#fff",
                     textAlign: "center",
                   }}
@@ -440,9 +467,9 @@ const Dashboard = () => {
                   <Card.Body>
                     <h6
                       style={{
-                        margin: "10px 0",
+                        margin: "19px -22px",
                         fontWeight: "bold",
-                        fontSize: "1rem",
+                        fontSize: "20px",
                       }}
                     >
                       Total Employees
@@ -626,7 +653,7 @@ const Dashboard = () => {
               <Row noGutters>
   {progressData.map((data, index) => {
     const isExpanded = expandedCards[data.id];
-    const visibleSubTrainings = isExpanded ? subTrainings[data.id] : subTrainings[data.id]?.slice(0, 3);
+    const visibleSubTrainings = isExpanded ? subTrainings[data.title] : subTrainings[data.title]?.slice(0, 3);
 
     const colSize = index < 3 ? "col-lg-4" : "col-lg-6";
 
@@ -634,7 +661,7 @@ const Dashboard = () => {
       <Col lg={index < 3 ? 4 : 6} md={index < 3 ? 4 : 6} sm={6} xs={12} key={data.id}>
         <Card className="dashboard-card">
           <Card.Body className="card-body">
-            <h5>{data.title}</h5>
+            <h5 className="text-center">{data.title}</h5>
             <div className="progress-container">
               <CircularProgressbar
                 value={data.value}
@@ -650,32 +677,41 @@ const Dashboard = () => {
             </div>
           </Card.Body>
           <Card.Footer className="card-footer">
-            <Row noGutters>
-              {visibleSubTrainings?.map((subTraining) => (
-                <Col key={subTraining.id} xs={12}>
-                  <div className="sub-training-name mt-2">
-                    <h6 className="sub-training-card">
-                      {subTraining.name} <hr />
-                    </h6>
-                  </div>
-                </Col>
-              ))}
-            </Row>
-            {subTrainings[data.id]?.length > 2 && (
-              <Button
-                variant="link"
-                className="show-more-btn"
-                onClick={() => toggleExpand(data.id)}
-              >
-                {isExpanded ? "Show Less" : "Show More"}
-              </Button>
-            )}
-          </Card.Footer>
+  <Row noGutters>
+    {visibleSubTrainings?.map((subTraining, subIndex) => (
+      <Col key={subIndex} xs={12}>
+        <div className="sub-training-name mt-2">
+          <h6 className="sub-training-card">
+            {subTraining.sub_training_name}
+          </h6>
+          <ProgressBar
+  style={{ height: '16px', marginTop: '19px', fontWeight: 'bold',borderRadius:'10px' }}
+  now={subTraining.completion_percentage}
+  label={`${subTraining.completion_percentage}%`}
+  variant={subTraining.completion_percentage === 100 ? 'success' : 'primary'}
+/>        </div>
+      </Col>
+    ))}
+  </Row>
+  {subTrainings[data.title]?.length > 2 && (
+ <div
+ className="show-more-btn"
+ onClick={() => toggleExpand(data.id)}
+ style={{ cursor: 'pointer',textAlign:'end',marginTop:'10px' }}
+>
+ <i  className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+</div>
+
+)}
+
+</Card.Footer>
         </Card>
       </Col>
     );
   })}
 </Row>
+
+
 
               </div>
            </div>
