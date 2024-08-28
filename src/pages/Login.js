@@ -89,7 +89,7 @@ function Login() {
             <>
               <center>
                 <h4 style={{ color: "#1E1E38" }}>
-                  <img style={{ width: "30%" }} src="https://i.postimg.cc/L89tRNPk/Frame-2.png" alt="" />
+                  {/* <img style={{ width: "30%" }} src="https://i.postimg.cc/L89tRNPk/Frame-2.png" alt="" /> */}
                 </h4>
               </center>
               <center>

@@ -161,7 +161,7 @@ function Result() {
     const imageUrl = 'https://i.postimg.cc/sDyDS61w/download-2-1.png';
     const otc = overallOTC;
   
-    doc.addImage(imageUrl, 'PNG', 250, 2, 20, 20);
+    // doc.addImage(imageUrl, 'PNG', 250, 2, 20, 20);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(19);
     const headerText = `Training Matrix : ${formattedDate}    OTC : ${otc}%`;

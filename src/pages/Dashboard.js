@@ -321,7 +321,7 @@ const Dashboard = () => {
       } else {
         const subTrainingData = response.data.sub_training_data || {};
         setSubTrainings(subTrainingData);
-        console.log(subTrainingData);
+        console.log("subtr",subTrainingData);
       }
     } catch (error) {
       console.error("Error fetching sub-trainings:", error);

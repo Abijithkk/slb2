@@ -102,7 +102,7 @@ function AddTrainings() {
         showToast('Training updated successfully!', 'success');
       } else {
         const response = await axios.put(`${BASE_URL}/api/sub-trainings/${editingId}/`, {
-          subtraining_id: editingId, // Include subtraining_id in the request payload
+          subtraining_id: editingId, 
           name: trainingName,
           main_training: selectedMainTraining,
           validity_period: validityPeriod,
